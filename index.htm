@@ -1,36 +1,239 @@
-<html lang="ru">
-<head>
-	<title>Evolution on grid</title>
-	<style>
-		body {
-		  margin: 0;
-		  padding: 0;
-		  background: #000;
-		  color: #bbb;
-		}
-	</style>
+<html land="ru">
+<body onload="init()">
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background: #000;
+        color: #bbb;
+    }
+</style>
+<canvas id="canvas" tabindex="0"></canvas>
 <script>
 
-var ctx;
 
-function ball(x, y, size)  {
-    ctx.globalAlpha = 1;
-    // ctx.fillStyle = 'rgb(' + parseInt(255 - size/20 * 255) + ',' + parseInt(255 - size/20 * 255) + ',' + parseInt(Math.random() * 255) + ')'
-    ctx.fillStyle = '#333';
-    ctx.beginPath();
-    ctx.arc(x, y, size, 0, 2*Math.PI);
-    ctx.closePath();
-    ctx.fill();
-  }
 
-function init() {
-	var canvas = document.getElementById('canvas');
-	ctx = canvas.getContext('2d');
-	ball(100,100,20);
-}
+    function init() {
+        G = new Graph();
+        M = new Map();
+
+        for (i = 0; i < 10; i++) {
+            e = new Entity(Math.floor(Math.random()*30), Math.floor(Math.random()*30))
+            M.add(e);
+            //e.timerId = setInterval(e.step, 100, e)
+            setInterval(step, 100);
+        }
+    }
+
+    function step() {
+        
+        Object.entries(M.elements).forEach(([id, e]) => {
+            e.step(e)
+        });
+    }
+
+    function Graph() {
+
+        this.canvas = document.getElementById('canvas');
+        this.ctx = canvas.getContext('2d');
+        this.w = canvas.width = window.innerWidth;
+        this.h = canvas.height = window.innerHeight;
+
+        // Нарисовать квадратик
+        this.box = function (x, y, w, color) {
+
+            this.ctx.fillStyle = color;
+            this.ctx.fillRect(x, y, w, w);
+        }
+
+        this.line = function (x1, y1, x2, y2) {
+
+            this.ctx.beginPath();
+            this.ctx.moveTo(x1, y1);
+            this.ctx.lineTo(x2, y2);
+            this.ctx.strokeStyle = "#333";
+            this.ctx.stroke();
+
+        }
+    }
+
+
+    function Map() {
+        this.cell_size = 10;
+        this.cells = new Object();
+        this.elements = new Object();
+        this.cols = 0;
+        this.rows = 0;
+        this.bg = '#000000';
+
+
+        this.init = function () {
+            for (var x = 0; x < G.w; x += this.cell_size) {
+                this.cols++;
+                G.line(x, 0, x, G.h);
+            }
+            for (var y = 0; y < G.h; y += this.cell_size) {
+                this.rows++;
+                G.line(0, y, G.w, y);
+            }
+
+        }
+
+        // Отрисовать объект на карте
+        this.drawObject = function (obj) {
+            x = obj.x * this.cell_size;
+            y = obj.y * this.cell_size;
+            G.box(x + 1, y + 1, this.cell_size - 2, obj.color);
+        }
+
+        // Скрыть объект на карте
+        this.hideObject = function (obj) {
+            x = obj.x * this.cell_size;
+            y = obj.y * this.cell_size;
+            G.box(x + 1, y + 1, this.cell_size - 2, this.bg);
+        }
+
+        this.add = function(e) {
+            console.warn('add', this.cells, e);
+            this.cells[e.x] = this.cells[e.x] || {};
+            this.cells[e.y] = e;
+            console.warn('added', this.cells, e);
+            this.elements[e.id] = e;
+        }
+
+        this.delete = function(e) {
+            this.hideObject(e);
+            console.warn('delete', this.cells, e)
+            delete this.cells[e.x][e.y];
+            console.warn('deleted', this.cells, e)
+            delete this.elements[e.id];
+        }
+
+        this.e = function(x, y) {
+            var id = '' + x + '-' + y;
+            return this.cells[id];
+        }
+
+        this.move = function() {
+            
+        }
+
+        this.init();
+    }
+
+    function Behavior(e) {
+        var dna_length = 10;
+        this.entity = e;
+        this.currentStep = 0;
+        this.step = function() {
+            this.steps[this.currentStep]()
+            this.currentStep++;
+            if(this.currentStep >= this.steps.length) {
+                this.currentStep = 0;
+            }
+
+        }
+
+        this.actions = [            
+            turn = () => { 
+                this.entity.directions.push(this.entity.directions.shift()) 
+            },
+            move = () => { 
+                var oldX = this.entity.x;
+                var oldY = this.entity.y;
+
+                if(this.entity.directions[0] == 'l') this.entity.x--;
+                if(this.entity.directions[0] == 'r') this.entity.x++;
+                if(this.entity.directions[0] == 't') this.entity.y--;
+                if(this.entity.directions[0] == 'b') this.entity.y++;
+                delete M.cells[this.entity.x][this.entity.y];
+                M.cells[oldX][oldY] = e;
+            },
+            eat = () => {
+                var inFront = this.entity.inFrontEntity();
+                if(inFront) {
+                    console.log(Object.entries(M.elements).length, Object.entries(M.cells).length)
+                    console.log(this.entity, 'eats', inFront)
+                    inFront.die();
+                }
+            },
+        ];
+
+        this.steps = Array(dna_length).fill(0).map(() => {return this.actions[Math.floor(Math.random() * this.actions.length)]});
+        
+        
+    }
+
+
+    function Entity(x, y) {
+        this.id = guid();
+        this.timerId = null;
+        this.x = x;
+        this.y = y;
+        this.color = '#191';
+        this.directions = ['l', 't', 'r', 'b'];
+        this.behavior = new Behavior(this);
+
+        this.step = function (_this) {
+            var dx = Math.random() < 0.5 ? -1 : 1;
+            var dy = Math.random() < 0.5 ? -1 : 1;
+            _this.hide()
+
+            _this.behavior.step();
+
+
+            _this.show();
+        }
+
+        this.hide = function () {
+            M.hideObject(this);
+        }
+
+        this.show = function () {
+            M.drawObject(this);
+        }
+
+        this.die = function() {
+            console.log('умер', this);
+            M.delete(this);
+            
+        }
+
+        // существо спереди
+        this.inFrontEntity = function() {
+            var enemyX, enemyY;
+            if(this.directions[0] === 'l') {
+                enemyX = this.x--;
+                enemyY = this.y;
+            }
+            if(this.directions[0] === 't') {
+                enemyX = this.x;
+                enemyY = this.y--;
+            }
+            if(this.directions[0] === 'r') {
+                enemyX = this.x++;
+                enemyY = this.y;
+            }
+            if(this.directions[0] === 'b') {
+                enemyX = this.x;
+                enemyY = this.y++;
+            }
+            return M.e(enemyX, enemyY)
+
+        }
+    }
+
+    function guid() {
+      function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000)
+          .toString(16)
+          .substring(1);
+      }
+      return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+        s4() + '-' + s4() + s4() + s4();
+    }
+
 
 </script>
-</head>
-<body onload="init()">
-	<canvas id="canvas"></canvas>
 </body>
+</html>
