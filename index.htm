@@ -1,4 +1,5 @@
-<html land="ru">
+<html lang="ru">
+<head><title>Evolution on grid</title></head>
 <body onload="init()">
 <style>
     body {
@@ -8,232 +9,557 @@
         color: #bbb;
     }
 </style>
-<canvas id="canvas" tabindex="0"></canvas>
+<canvas id="canvas" tabindex="0" onkeydown="processKey(event)" onmousedown="processMouse(event)"></canvas>
+
 <script>
 
 
+  // когда бот накопит энергию, он создаёт копию
+  // в одном случае из 4 при копировании происходит ошибка - мутация
 
-    function init() {
-        G = new Graph();
-        M = new Map();
+  var pause = false;
 
-        for (i = 0; i < 10; i++) {
-            e = new Entity(Math.floor(Math.random()*30), Math.floor(Math.random()*30))
-            M.add(e);
-            //e.timerId = setInterval(e.step, 100, e)
-            setInterval(step, 100);
-        }
+  function processKey(e) {
+    if (e.key === 'p') {
+      pause = !pause;
     }
+  }
 
-    function step() {
-        
-        Object.entries(M.elements).forEach(([id, e]) => {
-            e.step(e)
-        });
+  var LOG = [];
+  var botId = null;
+
+  function log(bot) {
+    // botId = botId || bot.id;
+    // if (bot.id === botId) {
+    //     console.log(bot.x, bot.y, bot.xp, bot.steps[0].name, bot.directions[0])
+    //     // LOG.push(bot);
+    //     // if (LOG.length % 10 === 0) {
+    //     //     console.log(LOG)
+    //     // }
+    // }
+
+  }
+
+  function processMouse(e) {
+
+    var x = Math.floor(e.clientX / M.cell_size);
+    var y = Math.floor(e.clientY / M.cell_size);
+
+    var bot = M.find(x, y);
+    console.log(bot)
+    track(bot);
+  }
+
+  function init() {
+    G = new Graph();
+    M = new Map();
+
+    for (i = 0; i < 50; i++) {
+      spawnBot();
     }
+    //M.add(new Bot(10, 10));
+    //M.add(new Bot(20, 10));
 
-    function Graph() {
+    // var bot1 = spawnBot();
+    // bot1.x = 10; bot1.y = 10;
+    // bot1.steps = [];
+    // var bot2 = spawnBot();
+    // bot2.x = 20; bot2.y = 10;
 
-        this.canvas = document.getElementById('canvas');
-        this.ctx = canvas.getContext('2d');
-        this.w = canvas.width = window.innerWidth;
-        this.h = canvas.height = window.innerHeight;
 
-        // Нарисовать квадратик
-        this.box = function (x, y, w, color) {
+    //step()
+    setInterval(step, 100);
+  }
 
-            this.ctx.fillStyle = color;
-            this.ctx.fillRect(x, y, w, w);
-        }
-
-        this.line = function (x1, y1, x2, y2) {
-
-            this.ctx.beginPath();
-            this.ctx.moveTo(x1, y1);
-            this.ctx.lineTo(x2, y2);
-            this.ctx.strokeStyle = "#333";
-            this.ctx.stroke();
-
-        }
+  function step() {
+    if (pause) {
+      return
     }
+    var a = 0;
 
-
-    function Map() {
-        this.cell_size = 10;
-        this.cells = new Object();
-        this.elements = new Object();
-        this.cols = 0;
-        this.rows = 0;
-        this.bg = '#000000';
-
-
-        this.init = function () {
-            for (var x = 0; x < G.w; x += this.cell_size) {
-                this.cols++;
-                G.line(x, 0, x, G.h);
-            }
-            for (var y = 0; y < G.h; y += this.cell_size) {
-                this.rows++;
-                G.line(0, y, G.w, y);
-            }
-
+    Object.keys(M.elements).forEach(id => {
+      var bot = M.elements[id];
+      if (bot) {
+        M.play(bot);
+        if (bot.tracking) {
+          console.log(bot);
         }
 
-        // Отрисовать объект на карте
-        this.drawObject = function (obj) {
-            x = obj.x * this.cell_size;
-            y = obj.y * this.cell_size;
-            G.box(x + 1, y + 1, this.cell_size - 2, obj.color);
-        }
-
-        // Скрыть объект на карте
-        this.hideObject = function (obj) {
-            x = obj.x * this.cell_size;
-            y = obj.y * this.cell_size;
-            G.box(x + 1, y + 1, this.cell_size - 2, this.bg);
-        }
-
-        this.add = function(e) {
-            console.warn('add', this.cells, e);
-            this.cells[e.x] = this.cells[e.x] || {};
-            this.cells[e.y] = e;
-            console.warn('added', this.cells, e);
-            this.elements[e.id] = e;
-        }
-
-        this.delete = function(e) {
-            this.hideObject(e);
-            console.warn('delete', this.cells, e)
-            delete this.cells[e.x][e.y];
-            console.warn('deleted', this.cells, e)
-            delete this.elements[e.id];
-        }
-
-        this.e = function(x, y) {
-            var id = '' + x + '-' + y;
-            return this.cells[id];
-        }
-
-        this.move = function() {
-            
-        }
-
-        this.init();
-    }
-
-    function Behavior(e) {
-        var dna_length = 10;
-        this.entity = e;
-        this.currentStep = 0;
-        this.step = function() {
-            this.steps[this.currentStep]()
-            this.currentStep++;
-            if(this.currentStep >= this.steps.length) {
-                this.currentStep = 0;
-            }
-
-        }
-
-        this.actions = [            
-            turn = () => { 
-                this.entity.directions.push(this.entity.directions.shift()) 
-            },
-            move = () => { 
-                var oldX = this.entity.x;
-                var oldY = this.entity.y;
-
-                if(this.entity.directions[0] == 'l') this.entity.x--;
-                if(this.entity.directions[0] == 'r') this.entity.x++;
-                if(this.entity.directions[0] == 't') this.entity.y--;
-                if(this.entity.directions[0] == 'b') this.entity.y++;
-                delete M.cells[this.entity.x][this.entity.y];
-                M.cells[oldX][oldY] = e;
-            },
-            eat = () => {
-                var inFront = this.entity.inFrontEntity();
-                if(inFront) {
-                    console.log(Object.entries(M.elements).length, Object.entries(M.cells).length)
-                    console.log(this.entity, 'eats', inFront)
-                    inFront.die();
-                }
-            },
-        ];
-
-        this.steps = Array(dna_length).fill(0).map(() => {return this.actions[Math.floor(Math.random() * this.actions.length)]});
-        
-        
-    }
-
-
-    function Entity(x, y) {
-        this.id = guid();
-        this.timerId = null;
-        this.x = x;
-        this.y = y;
-        this.color = '#191';
-        this.directions = ['l', 't', 'r', 'b'];
-        this.behavior = new Behavior(this);
-
-        this.step = function (_this) {
-            var dx = Math.random() < 0.5 ? -1 : 1;
-            var dy = Math.random() < 0.5 ? -1 : 1;
-            _this.hide()
-
-            _this.behavior.step();
-
-
-            _this.show();
-        }
-
-        this.hide = function () {
-            M.hideObject(this);
-        }
-
-        this.show = function () {
-            M.drawObject(this);
-        }
-
-        this.die = function() {
-            console.log('умер', this);
-            M.delete(this);
-            
-        }
-
-        // существо спереди
-        this.inFrontEntity = function() {
-            var enemyX, enemyY;
-            if(this.directions[0] === 'l') {
-                enemyX = this.x--;
-                enemyY = this.y;
-            }
-            if(this.directions[0] === 't') {
-                enemyX = this.x;
-                enemyY = this.y--;
-            }
-            if(this.directions[0] === 'r') {
-                enemyX = this.x++;
-                enemyY = this.y;
-            }
-            if(this.directions[0] === 'b') {
-                enemyX = this.x;
-                enemyY = this.y++;
-            }
-            return M.e(enemyX, enemyY)
-
-        }
-    }
-
-    function guid() {
-      function s4() {
-        return Math.floor((1 + Math.random()) * 0x10000)
-          .toString(16)
-          .substring(1);
       }
-      return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-        s4() + '-' + s4() + s4() + s4();
+    })
+
+    // this.cells.forEach( (col) => {
+    //     col.forEach( (cell) => {
+
+    //         if(cell) {
+    //             this.play(cell);
+    //             a++;
+    //         }
+
+    //     });
+    // });
+
+
+    //Object.entries(M.elements).forEach(([id, e]) => {
+    //    e.step(e)
+    //});
+  }
+
+  function randomBot(parentSteps = null) {
+    var e = new Bot(Math.floor(Math.random() * M.cols), Math.floor(Math.random() * M.rows), parentSteps)
+    M.add(e);
+    return e;
+  }
+
+  function randomX() {
+    return Math.floor(Math.random() * M.cols);
+  }
+
+  function randomY() {
+    return Math.floor(Math.random() * M.rows);
+  }
+
+  function Graph() {
+
+    this.canvas = document.getElementById('canvas');
+    this.ctx = canvas.getContext('2d');
+    this.w = canvas.width = window.innerWidth;
+    this.h = canvas.height = window.innerHeight;
+
+    // Нарисовать квадратик
+    this.box = function (x, y, w, color) {
+
+      this.ctx.fillStyle = color;
+      this.ctx.fillRect(x, y, w, w);
+    }
+
+    this.line = function (x1, y1, x2, y2) {
+
+      this.ctx.beginPath();
+      this.ctx.moveTo(x1, y1);
+      this.ctx.lineTo(x2, y2);
+      this.ctx.strokeStyle = "#333";
+      this.ctx.stroke();
+
+    }
+  }
+
+
+  function Map() {
+    this.cell_size = 20;
+    //this.cells = null;
+    this.elements = new Object();
+    this.cols = 0;
+    this.rows = 0;
+    this.bg = '#000000';
+
+
+    this.init = function () {
+      for (var x = 0; x < G.w; x += this.cell_size) {
+        this.cols++;
+        //G.line(x, 0, x, G.h);
+      }
+      for (var y = 0; y < G.h; y += this.cell_size) {
+        this.rows++;
+        //G.line(0, y, G.w, y);
+      }
+
+      //this.cells = Array(this.cols).fill(Array(this.rows).fill(null))
+
+    }
+
+    // Отрисовать объект на карте
+    this.drawObject = function (bot) {
+      x = bot.x * this.cell_size;
+      y = bot.y * this.cell_size;
+
+
+      var behaviorColor;
+      // цвет поведения
+      if (bot.died) {
+        behaviorColor = bot.color;
+      } else {
+        var cR = bot.steps.filter(i => i.name == 'turn').length / bot.steps.length * 255;
+        var cG = bot.steps.filter(i => i.name == 'move').length / bot.steps.length * 255;
+        var cB = bot.steps.filter(i => i.name == 'eat').length / bot.steps.length * 255;
+        var behaviorColor = 'rgb(' + cR + ',' + cG + ',' + cB + ')';
+      }
+
+      G.box(x + 1, y + 1, this.cell_size - 2, behaviorColor);
+
+      if (bot.tracking) {
+        debugger
+      }
+      G.box(x + this.cell_size / 4, y + this.cell_size / 4, this.cell_size - this.cell_size / 4 * 2, bot.color);
+
+
+      // рот
+      if (bot.directions[0] == 'r') {
+        G.box(x + this.cell_size / 3 * 2 - 1, y + this.cell_size / 3, this.cell_size - this.cell_size / 3 * 2, '#000');
+      }
+      if (bot.directions[0] == 'l') {
+        G.box(x + 1, y + this.cell_size / 3, this.cell_size - this.cell_size / 3 * 2, '#000');
+      }
+      if (bot.directions[0] == 't') {
+        G.box(x + this.cell_size / 3, y + 1, this.cell_size - this.cell_size / 3 * 2, '#000');
+      }
+      if (bot.directions[0] == 'b') {
+        G.box(x + this.cell_size / 3, y + this.cell_size / 3 * 2 - 1, this.cell_size - this.cell_size / 3 * 2, '#000');
+      }
+
+
+    }
+
+    // Скрыть объект на карте
+    this.hideObject = function (obj) {
+      x = obj.x * this.cell_size;
+      y = obj.y * this.cell_size;
+      G.box(x + 1, y + 1, this.cell_size - 2, this.bg);
+    }
+
+    this.add = function (e) {
+      //this.cells[e.x*M.cols + e.y] = e;
+
+
+      //this.cells[e.x] = this.cells[e.x] || {};
+      //this.cells[e.x][e.y] = e;
+
+      this.elements[e.id] = e;
+    }
+
+    this.delete = function (e) {
+      this.hideObject(e);
+
+      //delete this.cells[e.x][e.y];
+
+      delete this.elements[e.id];
+    }
+
+    this.play = function (bot) {
+      log(bot)
+      //var dx = Math.random() < 0.5 ? -1 : 1;
+      //var dy = Math.random() < 0.5 ? -1 : 1;
+      hideBot(bot)
+      stepBot(bot);
+      showBot(bot);
     }
 
 
+    this.find = function (x, y) {
+      return Object.values(this.elements).find((element) => {
+        return element.x === x && element.y === y;
+      })
+    }
+
+    this.init();
+  }
+
+  function botTurn(bot) {
+    bot.directions.push(bot.directions.shift())
+  }
+
+  function actions() {
+    // фенотипические проявления
+    return [
+      // повернуться
+      // @todo: добавить небольшое расходование энергии
+      turn = (bot) => {
+        botTurn(bot);
+      },
+      // нельзя двигаться туда, где уже кто-то есть
+      move = (bot) => {
+        var oldX = bot.x;
+        var oldY = bot.y;
+
+        if (bot.directions[0] == 'l') {
+          if (!M.find(bot.x - 1, bot.y)) {
+            bot.x--;
+          }
+        }
+        if (bot.directions[0] == 'r') {
+          if (!M.find(bot.x + 1, bot.y)) {
+            bot.x++;
+          }
+        }
+        if (bot.directions[0] == 't') {
+          if (!M.find(bot.x, bot.y - 1)) {
+            bot.y--;
+          }
+        }
+        if (bot.directions[0] == 'b') {
+          if (!M.find(bot.x, bot.y + 1)) {
+            bot.y++;
+          }
+        }
+
+        if (bot.x < 0) {
+          bot.x = M.cols - 1;
+        }
+        if (bot.y < 0) {
+          bot.y = M.rows - 1;
+        }
+        if (bot.x >= M.cols) {
+          bot.x = 0;
+        }
+        if (bot.y >= M.rows) {
+          bot.y = 0;
+        }
+
+
+        //M.cells[bot.x][bot.y] = bot;
+
+
+      },
+      eat = (bot) => {
+
+        var enemy;
+        if (bot.directions[0] == 'l') {
+          enemy = M.find(bot.x - 1, bot.y);
+
+        }
+        if (bot.directions[0] == 'r') {
+          var enemy = M.find(bot.x + 1, bot.y);
+
+        }
+        if (bot.directions[0] == 't') {
+          var enemy = M.find(bot.x, bot.y - 1);
+
+        }
+        if (bot.directions[0] == 'b') {
+          var enemy = M.find(bot.x, bot.y + 1);
+
+        }
+        if (enemy) {
+          // уничтожить жертву
+          //console.log('умер', enemy)
+          //M.cells[enemy.x][enemy.y] = null;
+          M.hideObject(enemy)
+          delete M.elements[enemy.id]
+          delete enemy;
+          // продлить жизнь хищника
+          bot.xp += 20;
+
+          // родить потомка, если много xp
+          //if(bot.xp > 30) {
+          //console.log('!!!!!!!')
+
+          spawnClone(bot)
+
+          //}
+        }
+
+
+      },
+    ];
+  }
+
+
+  // function Behavior(e, steps = null) {
+  //     var dna_length = 10;
+  //     this.entity = e;
+  //     this.currentStep = 0;
+  //     this.step = function() {
+  //         if(this.entity.died) { return }
+  //         this.steps[this.currentStep]()
+  //         this.currentStep++;
+  //         if(this.currentStep >= this.steps.length) {
+  //             this.currentStep = 0;
+  //         }
+
+  //     }
+
+
+  //     // if(!steps) {
+  //     //     this.steps = Array(dna_length).fill(0).map(() => {return this.actions[Math.floor(Math.random() * this.actions.length)]});
+  //     // } else {
+  //     //     this.steps = steps;
+  //     // }
+
+
+  // }
+
+  function stepBot(bot) {
+    if (bot.died) {
+      return
+    }
+
+    bot.xp--;
+
+    bot.xp -= 1;
+    if (bot.xp <= 0) {
+      bot.died = true;
+      bot.color = '#444';
+    }
+
+    if (bot.steps.length == 0) {
+      return
+    }
+
+    bot.steps[0](bot);
+
+    bot.steps.push(bot.steps.shift())
+  }
+
+  function spawnClone(source) {
+    var bot = cloneBot(source);
+    M.add(bot);
+  }
+
+  function spawnBot() {
+    var bot = createBot();
+    M.add(bot);
+    return bot;
+  }
+
+
+  function defaultBotProps() {
+    return {
+      tracking: false,
+      xp: 200,
+      died: false,
+      dna_length: 5,
+    }
+  }
+
+  function createBot(options = {}) {
+    var bot = Object.assign(defaultBotProps(), {
+      id: guid(),
+      x: options.x || randomX(),
+      y: options.y || randomY(),
+      color: options.color || 'rgb(' + rc() + ',' + rc() + ',' + rc() + ')',
+      directions: options.directions || ['l', 't', 'r', 'b'].reduce((a, v) => a.splice(Math.floor(Math.random() * a.length), 0, v) && a, []),
+      died: false,
+      xp: 100,
+      // сгенерировать для существа его уникальную программу (ДНК)
+      steps: options.steps || Array(defaultBotProps().dna_length).fill(0).map(() => {
+        return actions()[Math.floor(Math.random() * actions().length)]
+      }),
+    });
+
+
+    var actionNames = [0, 1, 2];
+    var acts = Array(bot.dna_length).fill(0).map(() => {
+      return actionNames[Math.floor(Math.random() * actionNames.length)]
+    });
+
+    bot.steps = acts.map((act) => {
+      return actions()[act]
+    })
+
+    return bot;
+  }
+
+  // if(!steps) {
+  //     this.steps = Array(dna_length).fill(0).map(() => {return this.actions[Math.floor(Math.random() * this.actions.length)]});
+  // } else {
+  //     this.steps = steps;
+  // }
+
+
+  // if (Object.keys(M.elements).length == 0) {
+  //     e.directions = ['r', 'b', 'l', 't'];
+  //     this.steps = [this.actions[0], this.actions[2]];
+  // }
+  // else {
+
+  //     this.steps = [this.actions[1]]
+  // }
+
+  function cloneBot(source) {
+    var bot = createBot();
+    bot.color = source.color;
+    bot.died = defaultBotProps().died;
+    bot.xp = defaultBotProps().xp;
+    bot.steps = source.steps;
+    return bot;
+  }
+
+
+  function hideBot(bot) {
+    M.hideObject(bot);
+  }
+
+  function showBot(bot) {
+    M.drawObject(bot);
+  }
+
+  function dieBot(bot) {
+    //console.log('умер', bot);
+    M.delete(bot);
+
+  }
+
+  // function Bot(x, y, steps = null) {
+  //     this.id = guid();
+  //     this.x = x;
+  //     this.y = y;
+  //     this.color = 'rgb(' + rc() + ',' + rc() + ',' + rc() + ')';
+  //     this.directions = ['l', 't', 'r', 'b'];
+  //     this.behavior = new Behavior(this, steps);
+  //     this.died = false;
+  //     this.xp = 20;
+
+
+  //     this.hide = function () {
+  //         M.hideObject(this);
+  //     }
+
+  //     this.show = function () {
+  //         M.drawObject(this);
+  //     }
+
+  //     this.die = function() {
+  //         console.log('умер', this);
+  //         M.delete(this);
+
+  //     }
+
+  //     // существо спереди
+  //     // this.inFrontBot = function() {
+  //     //     var enemyX, enemyY;
+  //     //     if(this.directions[0] === 'l') {
+  //     //         enemyX = this.x--;
+  //     //         enemyY = this.y;
+  //     //     }
+  //     //     if(this.directions[0] === 't') {
+  //     //         enemyX = this.x;
+  //     //         enemyY = this.y--;
+  //     //     }
+  //     //     if(this.directions[0] === 'r') {
+  //     //         enemyX = this.x++;
+  //     //         enemyY = this.y;
+  //     //     }
+  //     //     if(this.directions[0] === 'b') {
+  //     //         enemyX = this.x;
+  //     //         enemyY = this.y++;
+  //     //     }
+  //     //     return M.cells[enemyX][enemyY]
+
+  //     // }
+  // }
+
+  function rc() {
+    return parseInt(Math.random() * 255);
+  }
+
+  function guid() {
+    function s4() {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    }
+
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+      s4() + '-' + s4() + s4() + s4();
+  }
+
+  function track(bot) {
+    if (bot) {
+      bot.tracking = true;
+    }
+
+  }
 </script>
+
 </body>
 </html>
