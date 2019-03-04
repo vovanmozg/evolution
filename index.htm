@@ -12,7 +12,8 @@
 <canvas id="canvas" tabindex="0" onkeydown="processKey(event)" onmousedown="processMouse(event)"></canvas>
 
 <script>
-
+  var M;
+  var G;
 
   // когда бот накопит энергию, он создаёт копию
   // в одном случае из 4 при копировании происходит ошибка - мутация
@@ -25,20 +26,9 @@
     }
   }
 
-  var LOG = [];
   var botId = null;
 
-  function log(bot) {
-    // botId = botId || bot.id;
-    // if (bot.id === botId) {
-    //     console.log(bot.x, bot.y, bot.xp, bot.steps[0].name, bot.directions[0])
-    //     // LOG.push(bot);
-    //     // if (LOG.length % 10 === 0) {
-    //     //     console.log(LOG)
-    //     // }
-    // }
-
-  }
+  function log(bot) { }
 
   function processMouse(e) {
 
@@ -46,7 +36,6 @@
     var y = Math.floor(e.clientY / M.cell_size);
 
     var bot = M.find(x, y);
-    console.log(bot)
     track(bot);
   }
 
@@ -75,7 +64,6 @@
     if (pause) {
       return
     }
-    var a = 0;
 
     Object.keys(M.elements).forEach(id => {
       var bot = M.elements[id];
@@ -86,23 +74,7 @@
         }
 
       }
-    })
-
-    // this.cells.forEach( (col) => {
-    //     col.forEach( (cell) => {
-
-    //         if(cell) {
-    //             this.play(cell);
-    //             a++;
-    //         }
-
-    //     });
-    // });
-
-
-    //Object.entries(M.elements).forEach(([id, e]) => {
-    //    e.step(e)
-    //});
+    });
   }
 
   function randomBot(parentSteps = null) {
@@ -188,7 +160,7 @@
       G.box(x + 1, y + 1, this.cell_size - 2, behaviorColor);
 
       if (bot.tracking) {
-        debugger
+
       }
       G.box(x + this.cell_size / 4, y + this.cell_size / 4, this.cell_size - this.cell_size / 4 * 2, bot.color);
 

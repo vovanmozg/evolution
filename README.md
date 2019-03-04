@@ -6,6 +6,7 @@ Every bot has a program. Program is a sequence of actions. At birth, every bot g
 
 ## @todo
 - solve fast Apocalypse problem
+- add mutations
 - modify program structure (like foo52ru)
 - add bot color schemes
 - modify birth algorithm (division with the accumulation of energy) 
