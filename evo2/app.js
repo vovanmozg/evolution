@@ -80,6 +80,11 @@ class Command {
 
 
 		const command = bot.program.commands.shift();
+
+		if (command === undefined) {
+		  return;
+    }
+
 		bot.program.commands.push(command);
 
 		commands[command].execute(bot, world);
@@ -148,7 +153,9 @@ class CommandEat {
 
 class CommandEatSolar {
   static execute(bot, world) {
+    const cell = world.getCell(bot.x, bot.y);
 
+    bot.xp += cell.resources.light.power * 2;
   }
 }
 
@@ -165,6 +172,10 @@ class CommandClone {
       return;
     }
 
+    // Old bot lost half xp
+    bot.xp /= 2;
+
+    // New bot stays behind old, has default XP
     const newBot = Bot.cloneBot(
       bot,
       {
@@ -338,6 +349,7 @@ class Bot {
 			world.destroyBot(bot);
 
 			const resource = Resource.generateRandom();
+
 			Resource.add(bot.x, bot.y, resource, world.map);
 		}
 	}
@@ -346,12 +358,17 @@ class Bot {
 class Resource {
 	static add(x, y, resource, map) {
 		World.validateCoords(x, y);
-		map[x][y].resources.food = resource;
+		map[x][y].resources = {
+		  ...map[x][y].resources,
+      ...resource
+    };
 	}
 
 	static generateRandom() {
 		return {
-			type: 'food',
+			food: {
+        type: 'food',
+      },
 		};
 	}
 }
@@ -426,8 +443,10 @@ class World {
 				let resource = Resource.generateRandom();
 				Resource.add(x, y, resource, map);
 			}
-		})
-		debug(a)
+      let resourceLight = { light: { type: 'light', power: 1 - y / HEIGHT } };
+      Resource.add(x, y, resourceLight, map);
+		});
+		//debug(a)
 	}
 
 	step() {
@@ -437,9 +456,11 @@ class World {
 		this.eachBot( (bot) => {
 			Program.mutate(bot);
 			Program.step(bot, this);
+
 			Bot.liveStep(bot);
 			Bot.tryDie(bot, this);
 		});
+    //debug(this.map[0][0].resources);
 
 		// this.eachBot( bot => {
 		//
@@ -506,7 +527,7 @@ class World {
 			}
 			s += "\n";
 		}
-		debug(s);
+		//debug(s);
 	}
 }
 
@@ -528,7 +549,7 @@ class WorldCreator {
  *************************************************/
 
 function debug(msg) {
-	//console.log(msg);
+	console.log(msg);
 }
 
 class Drawer {
@@ -571,7 +592,7 @@ class Drawer {
 				this.drawResource(x, y, cell.resources, imageData);
 			}
 		});
-		debug(`cells: ${a}`)
+		//debug(`cells: ${a}`)
 
 		// Draw bots
 		this.world.eachBot((bot) => {
