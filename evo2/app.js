@@ -3,7 +3,7 @@
 // };
 const WIDTH = 100;
 const HEIGHT = 50;
-const FPS = 1;
+// const FPS = 1;
 const PROGRAM_LENGTH = 10;
 const CLONE_RATE = 2;
 const DEFAULT_BOT = {
@@ -12,7 +12,7 @@ const DEFAULT_BOT = {
 	direction: 0,
 	id: null,
 	rotate: 1,
-	program: { commands: [] }, // TODO: ссылка на общий объект
+	program: { commands: [], current: 0 }, // TODO: ссылка на общий объект
 	options: {}, // TODO: ссылка на общий объект
 	xp: 127,
   style: {
@@ -52,6 +52,7 @@ class Command {
 			Program.OPERATIONS.EAT,
 			Program.OPERATIONS.EAT_SOLAR,
       //OPERATIONS.CLONE,
+			Program.OPERATIONS.OVERPOPULATION,
 		];
 
 		//if (Math.random() > 0.99) {
@@ -62,9 +63,7 @@ class Command {
 	}
 
 	static execute(bot, world) {
-		if (bot.processing === true) {
-			return;
-		}
+		if (bot.processing === true) { return; }
 
 		bot.processing = true;
 		//debug(bot);
@@ -76,18 +75,26 @@ class Command {
 			[Program.OPERATIONS.EAT]: CommandEat,
       [Program.OPERATIONS.EAT_SOLAR]: CommandEatSolar,
       [Program.OPERATIONS.CLONE]: CommandClone,
+			[Program.OPERATIONS.OVERPOPULATION]: CommandOverpopulation,
 		};
 
+		// const operation = bot.program.commands.shift();
+		// if (operation === undefined) { return; }
+		// bot.program.commands.push(operation);
 
-		const command = bot.program.commands.shift();
+		if (bot.program.current >= bot.program.commands.length) {
+			bot.program.current = bot.program.commands.length - 1;
+		}
 
-		if (command === undefined) {
-		  return;
-    }
+		const operation = bot.program.commands[bot.program.current];
+		if (operation === undefined) { return; }
 
-		bot.program.commands.push(command);
+		bot.program.current++;
+		if (bot.program.current >= bot.program.commands.length ) {
+			bot.program.current = 0;
+		}
 
-		commands[command].execute(bot, world);
+		commands[operation].execute(bot, world);
 	}
 }
 
@@ -155,7 +162,7 @@ class CommandEatSolar {
   static execute(bot, world) {
     const cell = world.getCell(bot.x, bot.y);
 
-    bot.xp += cell.resources.light.power * 2;
+    bot.xp += cell.resources.light.power * 3;
   }
 }
 
@@ -194,6 +201,28 @@ class CommandClone {
   }
 }
 
+class CommandOverpopulation {
+	static execute(bot, world) {
+		const bots = [];
+		let coords;
+
+		let neighbors = 0;
+
+		for(let x = -1; x <= 1; x++) {
+			for(let y = -1; y <= 1; y++) {
+				if (x !== 0 && y !== 0) {
+					coords = World.normalizeCoords(bot.x + x, bot.y + y);
+					const cell = world.getCell(coords.x, coords.y);
+					if(Bot.get(cell)) {
+						neighbors++;
+					}
+				}
+			}
+		}
+		bot.xp -= neighbors;
+	}
+}
+
 class Program {
 	static OPERATIONS = {
 		MOVE: 0,
@@ -202,6 +231,7 @@ class Program {
 		EAT: 3,
 		EAT_SOLAR: 4,
 		CLONE: 5,
+		OVERPOPULATION: 6,
 	};
 
 	static generate() {
@@ -213,6 +243,7 @@ class Program {
 
 		return {
 			commands,
+			current: 0,
 		};
 	}
 
@@ -730,14 +761,79 @@ class GamePerformer {
   }
 
 	run() {
-
     requestAnimationFrame(() => this.step());
+    this.initDebugWindow();
+	}
+
+	initDebugWindow() {
+		const cnv = document.getElementById('cnv');
+		const info = document.getElementById('info');
+
+		const handleMouse = (e) => {
+			// const width = cnv.clientLeft;
+			// const height = cnv.clientHeight;
+
+			const botWidth = cnv.clientWidth / WIDTH;
+			const botHeight = cnv.clientHeight / HEIGHT;
 
 
-    // setInterval( () => {
-		// 	this.world.step();
-		// 	this.drawer.redraw();
-		// }, 1000 / FPS );
+			const botX = parseInt(e.x / botWidth);
+			const botY = parseInt(e.y / botHeight);
+
+			this.debugOptions = {
+				botX,
+				botY,
+			};
+
+		};
+		cnv.addEventListener('mousedown', handleMouse);
+
+		requestAnimationFrame(() => this.updateDebugWindow());
+
+	}
+
+	updateDebugWindow() {
+		if (this.debugOptions) {
+
+			const info = document.getElementById('info');
+
+			const cell = debugWorld.getCell(this.debugOptions.botX, this.debugOptions.botY);
+			let bot = Bot.get(cell);
+
+			if(!bot) {
+				bot = {
+					x: '',
+					y: '',
+					xp: '',
+					program: '',
+					id: '',
+				}
+			}
+
+			let content = '';
+
+			//`${jsonPretty}`
+			//const jsonPretty = JSON.stringify(bot);
+			content += `x: ${bot.x}</br>`;
+			content += `y: ${bot.y}</br>`;
+			content += `xp: ${Math.floor(bot.xp)}</br>`;
+			content += `program: ${bot.program.commands}</br>`;
+			content += `id: ${bot.id}</br>`;
+
+
+
+
+			info.innerHTML = content;
+
+
+
+			// info.innerHTML = `${botX}:${botY}:${jsonPretty}`;
+			//info.style.left = e.x + 'px';
+			//info.style.top = e.y + 'px';
+		}
+
+
+		requestAnimationFrame(() => this.updateDebugWindow());
 	}
 }
 
@@ -781,27 +877,3 @@ function HSVtoRGB(h, s, v) {
 Array.prototype.random = function () {
 	return this[Math.floor((Math.random() * this.length))];
 };
-
-// class Drawer2 {
-// 	constructor(world) {
-// 		this.world = world;
-// 		this.svg = Snap("#svg");
-// 		this.size = 10; // size of shulker
-// 		this.splines = {};
-// 	}
-//
-// 	redraw() {
-// 		this.world.eachBot((bot) => {
-// 			if (!this.splines[bot.id]) {
-// 				const spline = this.svg.rect(0, 0, this.size, this.size);
-// 				const randomColor = Math.floor(Math.random()*16777215).toString(16);
-// 				spline.attr({ fill: this.svg.gradient("l(0, 0, 1, 0)#000-#" + randomColor) });
-// 				this.splines[bot.id] = spline;
-// 			}
-// 			this.splines[bot.id].attr({
-// 				x: bot.x * 10,
-// 				y: bot.y * 10,
-// 			});
-// 		});
-// 	}
-// }
