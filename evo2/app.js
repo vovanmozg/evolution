@@ -1,8 +1,8 @@
 // const DEFAULT_CELL = {
 // 	resources: {},
 // };
-const WIDTH = 100;
-const HEIGHT = 50;
+const WIDTH = 120;
+const HEIGHT = 60;
 // const FPS = 1;
 const PROGRAM_LENGTH = 10;
 const CLONE_RATE = 2;
@@ -23,6 +23,7 @@ const DEFAULT_BOT = {
 
 };
 
+// Groups of bots for testing purposes. They can be used in populate()
 const TEST_CASES = [
 	[
 		{ ...DEFAULT_BOT, x: 42, y: 20, direction: 90, id: '0.99', rotate: 1, program: { commands: [1, 1, 0, 0, 1] }, options: {} },
@@ -38,7 +39,6 @@ const TEST_CASES = [
 ];
 
 
-
 /*************************************************
  * Domain level
  *************************************************/
@@ -51,12 +51,13 @@ class Command {
 			Program.OPERATIONS.ROTATE_COUNTERCLOCKWISE,
 			Program.OPERATIONS.EAT,
 			Program.OPERATIONS.EAT_SOLAR,
-      //OPERATIONS.CLONE,
+      Program.OPERATIONS.CLONE,
 			Program.OPERATIONS.OVERPOPULATION,
+//			Program.OPERATIONS.KILL_NEIGHBORS,
 		];
 
 		//if (Math.random() > 0.99) {
-		  items.push(Program.OPERATIONS.CLONE);
+		  //items.push(Program.OPERATIONS.CLONE);
     //}
 
 		return items[Math.floor(Math.random() * items.length)];
@@ -76,6 +77,7 @@ class Command {
       [Program.OPERATIONS.EAT_SOLAR]: CommandEatSolar,
       [Program.OPERATIONS.CLONE]: CommandClone,
 			[Program.OPERATIONS.OVERPOPULATION]: CommandOverpopulation,
+//			[Program.OPERATIONS.KILL_NEIGHBORS]: CommandKillNeighbors,
 		};
 
 		// const operation = bot.program.commands.shift();
@@ -95,6 +97,10 @@ class Command {
 		}
 
 		commands[operation].execute(bot, world);
+
+		if (operation === Program.OPERATIONS.EAT_SOLAR) {
+			CommandOverpopulation.execute(bot, world);
+		}
 	}
 }
 
@@ -208,52 +214,50 @@ class CommandOverpopulation {
 
 		let neighbors = 0;
 
-		for(let x = -1; x <= 1; x++) {
-			for(let y = -1; y <= 1; y++) {
-				if (x !== 0 && y !== 0) {
-					coords = World.normalizeCoords(bot.x + x, bot.y + y);
-					const cell = world.getCell(coords.x, coords.y);
-					if(Bot.get(cell)) {
-						neighbors++;
-					}
-				}
-			}
-		}
-		bot.xp -= neighbors;
+		world.eachNeighborBot(bot, world, (neighborBot) => {
+			neighbors++;
+		});
+		console.log(neighbors)
+
+		// for(let x = -1; x <= 1; x++) {
+		// 	for(let y = -1; y <= 1; y++) {
+		// 		if (x !== 0 && y !== 0) {
+		// 			coords = World.normalizeCoords(bot.x + x, bot.y + y);
+		// 			const cell = world.getCell(coords.x, coords.y);
+		// 			if(Bot.get(cell)) {
+		// 				neighbors++;
+		// 			}
+		// 		}
+		// 	}
+		// }
+		bot.xp -= neighbors/3;
 	}
 }
 
-class Program {
-	static OPERATIONS = {
-		MOVE: 0,
-		ROTATE_CLOCKWISE: 1,
-		ROTATE_COUNTERCLOCKWISE: 2,
-		EAT: 3,
-		EAT_SOLAR: 4,
-		CLONE: 5,
-		OVERPOPULATION: 6,
-	};
-
-	static generate() {
-		const commands = [];
-		// Create program with PROGRAM_LENGTH commands
-		for(let i = 0; i < PROGRAM_LENGTH; i++) {
-			commands.push(Command.rand());
+class CommandKillNeighbors {
+	static execute(bot, world) {
+		let { x: xNew, y: yNew } = Bot.frontPosition(bot);
+		const cell = world.getCell(xNew, yNew);
+		const botInFront = Bot.get(cell);
+		if (botInFront) {
+			world.destroyBot(botInFront);
 		}
 
-		return {
-			commands,
-			current: 0,
-		};
-	}
 
-	static step(bot, world) {
-		Command.execute(bot, world);
+		return
+
+		world.eachNeighborBot(bot, world, (neighborBot) => {
+			world.destroyBot(neighborBot);
+		});
 	}
+}
+
+class Mutation {
+	static MUTATION_PROBABILITY = 0.001;
 
 	static mutate(bot) {
 		// Mutations are very rare
-		if (Math.random() > 0.001) {
+		if (Math.random() > Mutation.MUTATION_PROBABILITY) {
 			return;
 		}
 
@@ -282,6 +286,7 @@ class Program {
 		// // Insertion
 		// bot.program.commands.splice(position, 0, this.randomOperationCode());
 	}
+
 
 	static randomChangeStyleComponent(value) {
 		const minComponentValue = 0;
@@ -318,7 +323,36 @@ class Program {
 	static randomOperationCode() {
 		return Object.values(Program.OPERATIONS).random();
 	}
+}
 
+class Program {
+	static OPERATIONS = {
+		MOVE: 0,
+		ROTATE_CLOCKWISE: 1,
+		ROTATE_COUNTERCLOCKWISE: 2,
+		EAT: 3,
+		EAT_SOLAR: 4,
+		CLONE: 5,
+		OVERPOPULATION: 6,
+//		KILL_NEIGHBORS: 7,
+	};
+
+	static generate() {
+		const commands = [];
+		// Create program with PROGRAM_LENGTH commands
+		for(let i = 0; i < PROGRAM_LENGTH; i++) {
+			commands.push(Command.rand());
+		}
+
+		return {
+			commands,
+			current: 0,
+		};
+	}
+
+	static step(bot, world) {
+		Command.execute(bot, world);
+	}
 }
 
 class Bot {
@@ -383,6 +417,10 @@ class Bot {
 
 			Resource.add(bot.x, bot.y, resource, world.map);
 		}
+	}
+
+	static isProcessing(bot) {
+		return bot.processing == false
 	}
 }
 
@@ -450,6 +488,22 @@ class World {
 		});
 	}
 
+	eachNeighborBot(bot, world, performer) {
+		for(let x = -1; x <= 1; x++) {
+			for(let y = -1; y <= 1; y++) {
+				if (x !== 0 && y !== 0) {
+
+					const coords = World.normalizeCoords(bot.x + x, bot.y + y);
+					const cell = world.getCell(coords.x, coords.y);
+					const neighborBot = Bot.get(cell);
+					if(neighborBot && Bot.isProcessing(neighborBot)) {
+						performer(neighborBot);
+					}
+				}
+			}
+		}
+	}
+
 	populate() {
 		//this.populateTest1(); return;
 
@@ -485,7 +539,7 @@ class World {
 
 		// Perform next action for every Bot
 		this.eachBot( (bot) => {
-			Program.mutate(bot);
+			Mutation.mutate(bot);
 			Program.step(bot, this);
 
 			Bot.liveStep(bot);
@@ -688,46 +742,50 @@ class Drawer {
 			}
 		}
 
-		//Draw mouth (face)
-		const mouthDeep = 1;
-		const mouthMargins = 3;
-		const faceColor = { r: 0, g: 0, b: 0 };
-		if (direction == 0) {
-			for (let x = vx + this.size - mouthDeep; x < vx + this.size; x++) {
-				for (let y = vy + mouthMargins; y < vy + this.size - mouthMargins; y++) {
-					this.writeImageDataPixel(x, y, faceColor, imageData);
-				}
-			}
-		}
-		if (direction == 90) {
-			for (let x = vx + mouthMargins; x < vx + this.size - mouthMargins; x++) {
-				for (let y = vy; y < vy + mouthDeep; y++) {
-					this.writeImageDataPixel(x, y, faceColor, imageData);
-				}
-			}
-		}
-		if (direction == 180) {
-			for (let x = vx; x < vx + mouthDeep; x++) {
-				for (let y = vy + mouthMargins; y < vy + this.size - mouthMargins; y++) {
-					this.writeImageDataPixel(x, y, faceColor, imageData);
-				}
-			}
-		}
-		if (direction == 270) {
-			for (let x = vx + mouthMargins; x < vx + this.size - mouthMargins; x++) {
-				for (let y = vy + this.size - mouthDeep; y < vy + this.size; y++) {
-					this.writeImageDataPixel(x, y, faceColor, imageData);
-				}
-			}
-		}
+		// //Draw mouth (face)
+		// const mouthDeep = 1;
+		// const mouthMargins = 3;
+		// const faceColor = { r: 0, g: 0, b: 0 };
+		// if (direction == 0) {
+		// 	for (let x = vx + this.size - mouthDeep; x < vx + this.size; x++) {
+		// 		for (let y = vy + mouthMargins; y < vy + this.size - mouthMargins; y++) {
+		// 			this.writeImageDataPixel(x, y, faceColor, imageData);
+		// 		}
+		// 	}
+		// }
+		// if (direction == 90) {
+		// 	for (let x = vx + mouthMargins; x < vx + this.size - mouthMargins; x++) {
+		// 		for (let y = vy; y < vy + mouthDeep; y++) {
+		// 			this.writeImageDataPixel(x, y, faceColor, imageData);
+		// 		}
+		// 	}
+		// }
+		// if (direction == 180) {
+		// 	for (let x = vx; x < vx + mouthDeep; x++) {
+		// 		for (let y = vy + mouthMargins; y < vy + this.size - mouthMargins; y++) {
+		// 			this.writeImageDataPixel(x, y, faceColor, imageData);
+		// 		}
+		// 	}
+		// }
+		// if (direction == 270) {
+		// 	for (let x = vx + mouthMargins; x < vx + this.size - mouthMargins; x++) {
+		// 		for (let y = vy + this.size - mouthDeep; y < vy + this.size; y++) {
+		// 			this.writeImageDataPixel(x, y, faceColor, imageData);
+		// 		}
+		// 	}
+		// }
 
 	}
 
 	writeImageDataPixel(x, y, color, imageData) {
-		imageData.data[((y * (imageData.width * 4)) + (x * 4)) + 0] = color.r;
-		imageData.data[((y * (imageData.width * 4)) + (x * 4)) + 1] = color.g;
-		imageData.data[((y * (imageData.width * 4)) + (x * 4)) + 2] = color.b;
-		imageData.data[((y * (imageData.width * 4)) + (x * 4)) + 3] = 255;
+		let index = ((y * (WIDTH * this.size * 4)) + (x * 4)) + 0;
+		imageData.data[index] = color.r;
+		index++;
+		imageData.data[index] = color.g;
+		index++;
+		imageData.data[index] = color.b;
+		index++;
+		imageData.data[index] = 255;
 	}
 }
 
@@ -740,20 +798,21 @@ class GamePerformer {
 	}
 
 	step() {
-    //let t0 = performance.now();
+    let t0 = performance.now();
 
     this.world.step();
-    //t0 = performance.now() - t0;
+    t0 = performance.now() - t0;
 
 
     counter++;
-    //if(counter%11 === 0) {
-			//let t1 = performance.now();
-			this.drawer.redraw();
-			//t1 = performance.now() - t1;
+		let t1 = performance.now();
+		this.drawer.redraw();
+		t1 = performance.now() - t1;
 
-			//console.log(`perf: ${t0}, ${t1} milliseconds.`);
-    //}
+		if(counter%11 === 0) {
+
+			console.log(`perf: ${t0}, ${t1} milliseconds.`);
+    }
 
 
 
