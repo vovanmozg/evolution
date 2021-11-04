@@ -19,7 +19,51 @@ const DEFAULT_BOT = {
 
 };
 
-export class Bot {
+
+function shifts() {
+  return [[1, 0], [0, -1], [-1, 0], [0, 1]];
+  //      left    top      right    bottom
+}
+
+function rightCyclicShift(ar) {
+  // Mutates ar for performance purposes
+  ar.push(ar.shift());
+  return ar;
+}
+
+/*
+* @param direction {Number} can be 0 (right), 90 (top), 180 (left), 270 (bottom)
+* @param rotate {Number} can be 1 (clockwise) or -1 (counterclockwise)
+*/
+function rotate1(direction, rotate) {
+  return (((direction) + rotate) & 3);
+}
+
+/*
+* @param direction {Number} can be 0 (right), 90 (top), 180 (left), 270 (bottom)
+* @param rotate {Number} can be 1 (clockwise) or -1 (counterclockwise)
+*/
+function rotate2(direction, rotate) {
+  return (((direction) + rotate) & 3);
+}
+
+// function rightPosition(bot) {
+//   return World.normalizeCoords(bot.x + 1, bot.y + 0);
+// }
+//
+// function topPosition(bot) {
+//   return World.normalizeCoords(bot.x + 0, bot.y - 1);
+// }
+//
+// function leftPosition(bot) {
+//   return World.normalizeCoords(bot.x - 1, bot.y + 0);
+// }
+//
+// function bottomPosition(bot) {
+//   return World.normalizeCoords(bot.x + 0, bot.y + 1);
+// }
+
+class Bot {
   static DEFAULT_XP = 10;
 
   static generateRandom(x, y) {
@@ -28,7 +72,7 @@ export class Bot {
       id: Bot.generateId(),
       x: x,
       y: y,
-      direction: Math.floor(Math.random() * 4) * 90,
+      direction: Math.floor(Math.random() * 4),
       rotate: Math.random() > 0.5 ? 1 : -1,
       program: Program.generate(),
       options: {},
@@ -46,13 +90,14 @@ export class Bot {
 
   // Returns coordinates behind the back of the bot
   static frontPosition(bot) {
-    const shift = [[1, 0], [0, -1], [-1, 0], [0, 1]][bot.direction/90];
+    const shift = shifts()[bot.direction];
     return World.normalizeCoords(bot.x + shift[0], bot.y + shift[1]);
   }
 
   // Returns coordinates behind the back of the bot
   static backPosition(bot) {
-    const shift = [[-1, 0], [0, 1], [1, 0], [0, -1]][bot.direction/90];
+    const shift = rightCyclicShift(rightCyclicShift(shifts()))[bot.direction];
+    //const shift = [[-1, 0], [0, 1], [1, 0], [0, -1]][bot.direction];
     return World.normalizeCoords(bot.x + shift[0], bot.y + shift[1]);
   }
 
@@ -88,5 +133,4 @@ export class Bot {
   }
 }
 
-export default Bot;
-export { DEFAULT_BOT };
+export { Bot, DEFAULT_BOT };

@@ -3,6 +3,11 @@ import { Resource } from './resource';
 import { Mutation } from './mutation';
 import { Program } from './program';
 
+/**
+ * Bot has 4 directions: right, up, left, down. Direction stored as code:
+ * right - 0, up - 90, left - 180, down - 270. It is angle of rotation counterclockwise.
+ */
+
 export class World {
   static WIDTH = 80;
   static HEIGHT = 40;

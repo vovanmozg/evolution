@@ -100,7 +100,7 @@ class CommandRotateClockwise {
   * @param rotate {Number} can be 1 (clockwise) or -1 (counterclockwise)
   */
   static rotate(direction, rotate) {
-    return (((direction / 90) + rotate) & 3) * 90;
+    return (((direction) + rotate) & 3);
   }
 }
 
@@ -114,7 +114,7 @@ class CommandRotateCounterclockwise {
   * @param rotate {Number} can be 1 (clockwise) or -1 (counterclockwise)
   */
   static rotate(direction, rotate) {
-    return (((direction / 90) + rotate) & 3) * 90;
+    return (((direction) + rotate) & 3);
   }
 }
 
@@ -169,7 +169,7 @@ class CommandClone {
   }
 
   static turn(direction) {
-    return (((direction / 90) + 2) & 3) * 90;
+    return (((direction / 90) + 2) & 3);
   }
 }
 
