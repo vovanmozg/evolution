@@ -14,3 +14,6 @@ Every bot has a program. Program is a sequence of actions. At birth, every bot g
 
 
 Inspired by foo52ru (https://www.youtube.com/watch?v=PCx228KcOow)
+https://vk.com/topic-167044850_39150989
+https://dimden.dev/cyberbiology/
+
