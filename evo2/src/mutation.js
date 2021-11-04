@@ -1,4 +1,4 @@
-import { Program } from './program';
+import { OPERATIONS } from './program';
 
 export class Mutation {
   static MUTATION_PROBABILITY = 0.001;
@@ -69,6 +69,6 @@ export class Mutation {
   }
 
   static randomOperationCode() {
-    return Object.values(Program.OPERATIONS).random();
+    return Object.values(OPERATIONS).random();
   }
 }

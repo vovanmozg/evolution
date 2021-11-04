@@ -1,4 +1,4 @@
-import { Program } from '../program';
+import { OPERATIONS } from '../program';
 import { Bot } from "../bot";
 // import Move from './command/move';
 // import RotateClockwise from './rotate_clockwise';
@@ -11,18 +11,18 @@ export class Command {
   // Generates random operations sequence
   static rand() {
     const items = [
-      Program.OPERATIONS.MOVE,
-      Program.OPERATIONS.ROTATE_CLOCKWISE,
-      Program.OPERATIONS.ROTATE_COUNTERCLOCKWISE,
-      Program.OPERATIONS.EAT,
-      Program.OPERATIONS.EAT_SOLAR,
-      Program.OPERATIONS.CLONE,
-      Program.OPERATIONS.OVERPOPULATION,
-//			Program.OPERATIONS.KILL_NEIGHBORS,
+      OPERATIONS.MOVE,
+      OPERATIONS.ROTATE_CLOCKWISE,
+      OPERATIONS.ROTATE_COUNTERCLOCKWISE,
+      OPERATIONS.EAT,
+      OPERATIONS.EAT_SOLAR,
+      OPERATIONS.CLONE,
+      OPERATIONS.OVERPOPULATION,
+//			OPERATIONS.KILL_NEIGHBORS,
     ];
 
     //if (Math.random() > 0.99) {
-    //items.push(Program.OPERATIONS.CLONE);
+    //items.push(OPERATIONS.CLONE);
     //}
 
     return items[Math.floor(Math.random() * items.length)];
@@ -35,14 +35,14 @@ export class Command {
     //debug(bot);
 
     const commands = {
-      [Program.OPERATIONS.MOVE]: CommandMove,
-      [Program.OPERATIONS.ROTATE_CLOCKWISE]: CommandRotateClockwise,
-      [Program.OPERATIONS.ROTATE_COUNTERCLOCKWISE]: CommandRotateCounterclockwise,
-      [Program.OPERATIONS.EAT]: CommandEat,
-      [Program.OPERATIONS.EAT_SOLAR]: CommandEatSolar,
-      [Program.OPERATIONS.CLONE]: CommandClone,
-      [Program.OPERATIONS.OVERPOPULATION]: CommandOverpopulation,
-//			[Program.OPERATIONS.KILL_NEIGHBORS]: CommandKillNeighbors,
+      [OPERATIONS.MOVE]: CommandMove,
+      [OPERATIONS.ROTATE_CLOCKWISE]: CommandRotateClockwise,
+      [OPERATIONS.ROTATE_COUNTERCLOCKWISE]: CommandRotateCounterclockwise,
+      [OPERATIONS.EAT]: CommandEat,
+      [OPERATIONS.EAT_SOLAR]: CommandEatSolar,
+      [OPERATIONS.CLONE]: CommandClone,
+      [OPERATIONS.OVERPOPULATION]: CommandOverpopulation,
+//			[OPERATIONS.KILL_NEIGHBORS]: CommandKillNeighbors,
     };
 
     // const operation = bot.program.commands.shift();
@@ -63,7 +63,7 @@ export class Command {
 
     commands[operation].execute(bot, world);
 
-    if (operation === Program.OPERATIONS.EAT_SOLAR) {
+    if (operation === OPERATIONS.EAT_SOLAR) {
       CommandOverpopulation.execute(bot, world);
     }
   }
