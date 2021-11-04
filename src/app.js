@@ -1,7 +1,6 @@
-import Bot, { DEFAULT_BOT } from './bot';
-import { WorldCreator } from './world';
-
-import { World } from './world';
+import { Bot, DEFAULT_BOT } from './domain/bot';
+import { WorldCreator } from './domain/world';
+import { World } from './domain/world';
 
 // const DEFAULT_CELL = {
 // 	resources: {},
@@ -25,12 +24,6 @@ const TEST_CASES = [
     { ...DEFAULT_BOT, x: 10, y: 10, direction: 270, id: '0.99', rotate: 1, program: { commands: [5] }, options: {}, processing: false },
   ],
 ];
-
-
-/*************************************************
- * Domain level
- *************************************************/
-
 
 
 /*************************************************
