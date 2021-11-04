@@ -4,8 +4,8 @@ import { Mutation } from './mutation';
 import { Program } from './program';
 
 export class World {
-  static WIDTH = 120;
-  static HEIGHT = 60;
+  static WIDTH = 80;
+  static HEIGHT = 40;
 
   constructor(width, height) {
     this.width = width; // cols
