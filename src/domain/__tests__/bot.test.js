@@ -1,4 +1,5 @@
 import bot from '../bot';
+
 const rightCyclicShift = bot.__get__('rightCyclicShift');
 
 test('Shifts elements cyclically', () => {

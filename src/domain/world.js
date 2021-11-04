@@ -8,9 +8,10 @@ import { Program } from './program';
  * right - 0, up - 90, left - 180, down - 270. It is angle of rotation counterclockwise.
  */
 
+const WIDTH = 100;
+const HEIGHT = 50;
+
 export class World {
-  static WIDTH = 80;
-  static HEIGHT = 40;
 
   constructor(width, height) {
     this.width = width; // cols
@@ -21,20 +22,20 @@ export class World {
   }
 
   static validateCoords(x, y) {
-    if (x >= World.WIDTH || x < 0) {
-      throw `x should be from 0 to ${World.WIDTH}`;
+    if (x >= WIDTH || x < 0) {
+      throw `x should be from 0 to ${WIDTH}`;
     }
 
-    if (y >= World.HEIGHT || y < 0) {
-      throw `x should be from 0 to ${World.WIDTH}`;
+    if (y >= HEIGHT || y < 0) {
+      throw `x should be from 0 to ${WIDTH}`;
     }
   }
 
   static normalizeCoords(x, y) {
-    if (x < 0) x = World.WIDTH - 1;
-    if (x > World.WIDTH - 1) x = 0;
-    if (y < 0) y = World.HEIGHT - 1;
-    if (y > World.HEIGHT - 1) y = 0;
+    if (x < 0) x = WIDTH - 1;
+    if (x > WIDTH - 1) x = 0;
+    if (y < 0) y = HEIGHT - 1;
+    if (y > HEIGHT - 1) y = 0;
 
     return { x: x, y: y };
   }
@@ -97,7 +98,7 @@ export class World {
         let resource = Resource.generateRandom();
         Resource.add(x, y, resource, map);
       }
-      let resourceLight = { light: { type: 'light', power: 1 - y / World.HEIGHT } };
+      let resourceLight = { light: { type: 'light', power: 1 - y / HEIGHT } };
       Resource.add(x, y, resourceLight, map);
     });
     //debug(a)
@@ -190,7 +191,7 @@ export class World {
 export class WorldCreator {
   static create() {
     // Create world as matrix
-    const world = new World(World.WIDTH, World.HEIGHT);
+    const world = new World(WIDTH, HEIGHT);
     // Create bots in world
     world.populate();
     world.initResources(world.map);
@@ -198,3 +199,8 @@ export class WorldCreator {
     return world;
   }
 }
+
+export {
+  WIDTH,
+  HEIGHT,
+};

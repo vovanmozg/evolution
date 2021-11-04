@@ -5,7 +5,7 @@ export class Resource {
     World.validateCoords(x, y);
     map[x][y].resources = {
       ...map[x][y].resources,
-      ...resource
+      ...resource,
     };
   }
 

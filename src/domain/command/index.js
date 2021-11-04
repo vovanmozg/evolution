@@ -1,5 +1,5 @@
 import { OPERATIONS } from '../program';
-import { Bot } from "../bot";
+import { Bot } from '../bot';
 // import Move from './command/move';
 // import RotateClockwise from './rotate_clockwise';
 // import RotateCounterclockwise from './rotate_counterclockwise';
@@ -18,21 +18,23 @@ export class Command {
       OPERATIONS.EAT_SOLAR,
       OPERATIONS.CLONE,
       OPERATIONS.OVERPOPULATION,
-//			OPERATIONS.KILL_NEIGHBORS,
+      //			OPERATIONS.KILL_NEIGHBORS,
     ];
 
-    //if (Math.random() > 0.99) {
-    //items.push(OPERATIONS.CLONE);
-    //}
+    // if (Math.random() > 0.99) {
+    // items.push(OPERATIONS.CLONE);
+    // }
 
     return items[Math.floor(Math.random() * items.length)];
   }
 
   static execute(bot, world) {
-    if (bot.processing === true) { return; }
+    if (bot.processing === true) {
+      return;
+    }
 
     bot.processing = true;
-    //debug(bot);
+    // debug(bot);
 
     const commands = {
       [OPERATIONS.MOVE]: CommandMove,
@@ -42,7 +44,7 @@ export class Command {
       [OPERATIONS.EAT_SOLAR]: CommandEatSolar,
       [OPERATIONS.CLONE]: CommandClone,
       [OPERATIONS.OVERPOPULATION]: CommandOverpopulation,
-//			[OPERATIONS.KILL_NEIGHBORS]: CommandKillNeighbors,
+      //			[OPERATIONS.KILL_NEIGHBORS]: CommandKillNeighbors,
     };
 
     // const operation = bot.program.commands.shift();
@@ -54,10 +56,12 @@ export class Command {
     }
 
     const operation = bot.program.commands[bot.program.current];
-    if (operation === undefined) { return; }
+    if (operation === undefined) {
+      return;
+    }
 
     bot.program.current++;
-    if (bot.program.current >= bot.program.commands.length ) {
+    if (bot.program.current >= bot.program.commands.length) {
       bot.program.current = 0;
     }
 
@@ -69,10 +73,9 @@ export class Command {
   }
 }
 
-
 class CommandMove {
   static execute(bot, world) {
-    let { x: xNew, y: yNew } = Bot.frontPosition(bot);
+    const { x: xNew, y: yNew } = Bot.frontPosition(bot);
 
     const cell = world.getCell(xNew, yNew);
     const botInFront = Bot.get(cell);
@@ -122,7 +125,6 @@ class CommandEat {
   static execute(bot, world) {
     const cell = world.getCell(bot.x, bot.y);
     if (cell.resources.food) {
-
       bot.xp += 100;
       if (bot.xp > 255) bot.xp = 255;
       delete cell.resources.food;
@@ -183,34 +185,22 @@ class CommandOverpopulation {
     world.eachNeighborBot(bot, world, (neighborBot) => {
       neighbors++;
     });
-    console.log(neighbors)
 
-    // for(let x = -1; x <= 1; x++) {
-    // 	for(let y = -1; y <= 1; y++) {
-    // 		if (x !== 0 && y !== 0) {
-    // 			coords = World.normalizeCoords(bot.x + x, bot.y + y);
-    // 			const cell = world.getCell(coords.x, coords.y);
-    // 			if(Bot.get(cell)) {
-    // 				neighbors++;
-    // 			}
-    // 		}
-    // 	}
-    // }
-    bot.xp -= neighbors/3;
+
+    bot.xp -= neighbors / 3;
   }
 }
 
 class CommandKillNeighbors {
   static execute(bot, world) {
-    let { x: xNew, y: yNew } = Bot.frontPosition(bot);
+    const { x: xNew, y: yNew } = Bot.frontPosition(bot);
     const cell = world.getCell(xNew, yNew);
     const botInFront = Bot.get(cell);
     if (botInFront) {
       world.destroyBot(botInFront);
     }
 
-
-    return
+    return;
 
     world.eachNeighborBot(bot, world, (neighborBot) => {
       world.destroyBot(neighborBot);

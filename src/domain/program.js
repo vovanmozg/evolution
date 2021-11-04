@@ -3,12 +3,10 @@ import { Command } from './command';
 const PROGRAM_LENGTH = 10;
 
 export class Program {
-
-
   static generate() {
     const commands = [];
     // Create program with PROGRAM_LENGTH commands
-    for(let i = 0; i < PROGRAM_LENGTH; i++) {
+    for (let i = 0; i < PROGRAM_LENGTH; i++) {
       commands.push(Command.rand());
     }
 
