@@ -13,7 +13,6 @@ const config = {
         path: path.resolve(__dirname, "dist"),
     },
     devServer: {
-        open: true,
         host: "localhost",
     },
     devtool: 'source-map',
