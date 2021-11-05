@@ -14,10 +14,16 @@ const DEFAULT_BOT = {
   style: {
     h: 1,
     s: 1,
-    b: 1
-  }
+    b: 1,
+  },
 
 };
+
+const RIGHT = 0;
+const TOP = 1;
+const LEFT = 2;
+const BOTTOM = 3;
+const DEFAULT_XP = 10;
 
 function shifts() {
   return [[1, 0], [0, -1], [-1, 0], [0, 1]];
@@ -62,7 +68,6 @@ function rotate2(direction, rotate) {
 //   return World.normalizeCoords(bot.x + 0, bot.y + 1);
 // }
 
-
 function cloneBot(bot, changes = {}) {
   return {
     x: changes.x === undefined ? bot.x : changes.x,
@@ -76,11 +81,11 @@ function cloneBot(bot, changes = {}) {
       commands: bot.program.commands.slice(),
       current: bot.program.current,
     },
-    options: Object.assign({}, bot.options),
+    options: { ...bot.options },
     style: {
       h: bot.style.h,
       s: bot.style.s,
-      v: bot.style.v
+      v: bot.style.v,
     },
     processing: bot.processing,
   };
@@ -90,15 +95,29 @@ function isProcessing(bot) {
   return bot.processing === false;
 }
 
-class Bot {
-  static DEFAULT_XP = 10;
+function isDirectionRight(bot) {
+  return bot.direction === 0;
+}
 
+function isDirectionLeft(bot) {
+  return bot.direction === 2;
+}
+
+function isDirectionTop(bot) {
+  return bot.direction === 1;
+}
+
+function isDirectionBottom(bot) {
+  return bot.direction === 3;
+}
+
+class Bot {
   static generateRandom(x, y) {
     return {
       ...DEFAULT_BOT,
       id: Bot.generateId(),
-      x: x,
-      y: y,
+      x,
+      y,
       direction: Math.floor(Math.random() * 4),
       rotate: Math.random() > 0.5 ? 1 : -1,
       program: Program.generate(),
@@ -107,7 +126,7 @@ class Bot {
         h: Math.random(),
         s: Math.random(),
         v: Math.random(),
-      }
+      },
     };
   }
 
@@ -124,13 +143,12 @@ class Bot {
   // Returns coordinates behind the back of the bot
   static backPosition(bot) {
     const shift = rightCyclicShift(rightCyclicShift(shifts()))[bot.direction];
-    //const shift = [[-1, 0], [0, 1], [1, 0], [0, -1]][bot.direction];
+    // const shift = [[-1, 0], [0, 1], [1, 0], [0, -1]][bot.direction];
     return World.normalizeCoords(bot.x + shift[0], bot.y + shift[1]);
   }
 
-
   static generateId() {
-    return '' + Math.random();
+    return `${Math.random()}`;
   }
 
   // tick of the bot live
@@ -141,10 +159,10 @@ class Bot {
   static tryDie(bot, world) {
     if (bot.xp <= 0) {
       world.destroyBot(bot);
-      //if (Math.random() > 0.3) {
+      // if (Math.random() > 0.3) {
       const resource = Resource.generateRandom();
       Resource.add(bot.x, bot.y, resource, world.map);
-      //}
+      // }
     }
   }
 }
@@ -152,6 +170,15 @@ class Bot {
 export {
   Bot,
   cloneBot,
+  isDirectionRight,
+  isDirectionLeft,
+  isDirectionTop,
+  isDirectionBottom,
   isProcessing,
-  DEFAULT_BOT
+  DEFAULT_BOT,
+  RIGHT,
+  TOP,
+  LEFT,
+  BOTTOM,
+  DEFAULT_XP,
 };

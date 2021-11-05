@@ -1,5 +1,5 @@
 import { OPERATIONS } from '../program';
-import { Bot } from '../bot';
+import { Bot, cloneBot, DEFAULT_XP } from '../bot';
 // import Move from './command/move';
 // import RotateClockwise from './rotate_clockwise';
 // import RotateCounterclockwise from './rotate_counterclockwise';
@@ -149,7 +149,7 @@ class CommandClone {
       return;
     }
 
-    if (bot.xp < Bot.DEFAULT_XP * CLONE_RATE) {
+    if (bot.xp < DEFAULT_XP * CLONE_RATE) {
       return;
     }
 
@@ -157,13 +157,13 @@ class CommandClone {
     bot.xp /= 2;
 
     // New bot stays behind old, has default XP
-    const newBot = Bot.cloneBot(
+    const newBot = cloneBot(
       bot,
       {
         ...position,
         id: Bot.generateId(),
         direction: CommandClone.turn(bot.direction),
-        xp: Bot.DEFAULT_XP,
+        xp: DEFAULT_XP,
       },
     );
 
@@ -185,7 +185,6 @@ class CommandOverpopulation {
     world.eachNeighborBot(bot, world, (neighborBot) => {
       neighbors++;
     });
-
 
     bot.xp -= neighbors / 3;
   }

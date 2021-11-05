@@ -1,5 +1,14 @@
-import { Bot, DEFAULT_BOT } from './domain/bot';
-import { WorldCreator, World, WIDTH, HEIGHT } from './domain/world';
+import {
+  Bot,
+  DEFAULT_BOT,
+  RIGHT,
+  TOP,
+  LEFT,
+  BOTTOM,
+} from './domain/bot';
+import {
+  WorldCreator, World, WIDTH, HEIGHT,
+} from './domain/world';
 
 // const DEFAULT_CELL = {
 // 	resources: {},
@@ -115,12 +124,10 @@ class Drawer {
       0.45,
       0.6,
       0.75,
-      0.9
+      0.9,
     ];
 
-    const weights = bot.program.commands.map((operation) => {
-      return dots[operation]
-    });
+    const weights = bot.program.commands.map((operation) => dots[operation]);
 
     const sum = weights.reduce((a, b) => a + b, 0);
     const avg = (sum / weights.length) || 0;
@@ -138,77 +145,158 @@ class Drawer {
     // const g = 128 + parseInt(parseFloat(bot.id) * 128);
 
     // color = { r: 0, g: g, b: 100 };
-    //color = HSVtoRGB(bot.style.h, bot.style.s, bot.style.v);
-    //color = {r: bot.style.h * 255, g: bot.style.s * 255, b: bot.style.v * 255}
-
+    // color = HSVtoRGB(bot.style.h, bot.style.s, bot.style.v);
+    // color = {r: bot.style.h * 255, g: bot.style.s * 255, b: bot.style.v * 255}
 
     // }
-    //bot = this.setColor(bot);
+    // bot = this.setColor(bot);
     color = this.getColor(bot);
-
 
     const x = bot.x * this.size;
     const y = bot.y * this.size;
 
-    this.writeImageDataBot(x, y, bot.direction, color, imageData);
+    this.writeImageDataBot(x, y, bot, bot.direction, color, imageData);
   }
 
   setColor(bot) {
 	  return bot;
   }
 
-  writeImageDataBot(vx, vy, direction, color, imageData) {
+  /**
+   *  Bot structure
+   *  - main body (X)
+   *  - borders (b)
+   *
+   *  bbbbbbbb
+   * bXXXXXXXXb
+   * bXXXXXXXXb
+   * bXXXXXXX
+   * bXXXXXXX  <- mouth
+   * bXXXXXXX
+   * bXXXXXXX
+   * bXXXXXXXXb
+   * bXXXXXXXXb
+   *  bbbbbbbb
+   *
+   * @param vx
+   * @param vy
+   * @param bot
+   * @param direction
+   * @param color
+   * @param imageData
+   */
+  writeImageDataBot(vx, vy, bot, direction, color, imageData) {
+    const mainBodyLeftX = vx + 1;
+    const mainBodyRightX = vx + this.size - 2;
+    const mainBodyTopY = vy + 1;
+    const mainBodyBottomY = vy + this.size - 2;
 
-    for (let y = vy + 1; y < vy + this.size - 1; y += 1) {
-      this.writeImageDataPixel(vx, y, color, imageData);
-      this.writeImageDataPixel(vx + this.size - 1, y, color, imageData);
-    }
+    const botLeftX = vx;
+    const botRightX = vx + this.size - 1;
+    const botTopY = vy;
+    const botBottomY = vy + this.size - 1;
 
-    for (let x = vx + 1; x < vx + this.size - 1; x += 1) {
-      this.writeImageDataPixel(x, vy, color, imageData);
-      this.writeImageDataPixel(x, vy + this.size - 1, color, imageData);
-    }
+    const mouth = {
+      [RIGHT]: [
+        botRightX - 2,
+        botTopY + 3,
+        botRightX,
+        botBottomY - 3,
+      ],
+      [TOP]: [
+        botLeftX + 3,
+        botTopY,
+        botRightX - 3,
+        botTopY + 2,
+      ],
+      [LEFT]: [
+        botLeftX,
+        botTopY + 3,
+        botLeftX + 2,
+        botBottomY - 3,
+      ],
+      [BOTTOM]: [
+        botLeftX + 3,
+        botBottomY - 2,
+        botRightX - 3,
+        botBottomY,
+      ],
+    };
 
-    for (let x = vx + 1; x < vx + this.size - 1; x++) {
-      for (let y = vy + 1; y < vy + this.size - 1; y++) {
-        this.writeImageDataPixel(x, y, color, imageData);
+    const lmouth = mouth[direction];
+
+    for (let y = mainBodyTopY; y <= mainBodyBottomY; y += 1) {
+      // Left border
+      if (!this.inMouth(botLeftX, y, lmouth)) {
+        this.writeImageDataPixel(botLeftX, y, color, imageData);
+      }
+
+      // Right border
+      if (!this.inMouth(botRightX, y, lmouth)) {
+        this.writeImageDataPixel(botRightX, y, color, imageData);
       }
     }
 
+    for (let x = mainBodyLeftX; x <= mainBodyRightX; x += 1) {
+      // Top border
+      if (!this.inMouth(x, botTopY, lmouth)) {
+        this.writeImageDataPixel(x, botTopY, color, imageData); // {r: 255, g: 255, b: 255}
+      }
 
+      // Bottom border
+      if (!this.inMouth(x, botBottomY, lmouth)) {
+        this.writeImageDataPixel(x, botBottomY, color, imageData);
+      }
+    }
 
+    for (let x = mainBodyLeftX; x <= mainBodyRightX; x++) {
+      for (let y = mainBodyTopY; y <= mainBodyBottomY; y++) {
+        if (!this.inMouth(x, y, lmouth)) {
+          this.writeImageDataPixel(x, y, color, imageData);
+        }
+      }
+    }
+
+    // this.drawMouth(vx, vy, direction, imageData);
+  }
+
+  inMouth(x, y, mouth) {
+    return x >= mouth[0] && x <= mouth[2] && y >= mouth[1] && y <= mouth[3];
+  }
+
+  drawMouth(vx, vy, direction, imageData) {
     // //Draw mouth (face)
-    // const mouthDeep = 1;
-    // const mouthMargins = 3;
-    // const faceColor = { r: 0, g: 0, b: 0 };
-    // if (direction == 0) {
-    // 	for (let x = vx + this.size - mouthDeep; x < vx + this.size; x++) {
-    // 		for (let y = vy + mouthMargins; y < vy + this.size - mouthMargins; y++) {
-    // 			this.writeImageDataPixel(x, y, faceColor, imageData);
-    // 		}
-    // 	}
-    // }
-    // if (direction == 90) {
-    // 	for (let x = vx + mouthMargins; x < vx + this.size - mouthMargins; x++) {
-    // 		for (let y = vy; y < vy + mouthDeep; y++) {
-    // 			this.writeImageDataPixel(x, y, faceColor, imageData);
-    // 		}
-    // 	}
-    // }
-    // if (direction == 180) {
-    // 	for (let x = vx; x < vx + mouthDeep; x++) {
-    // 		for (let y = vy + mouthMargins; y < vy + this.size - mouthMargins; y++) {
-    // 			this.writeImageDataPixel(x, y, faceColor, imageData);
-    // 		}
-    // 	}
-    // }
-    // if (direction == 270) {
-    // 	for (let x = vx + mouthMargins; x < vx + this.size - mouthMargins; x++) {
-    // 		for (let y = vy + this.size - mouthDeep; y < vy + this.size; y++) {
-    // 			this.writeImageDataPixel(x, y, faceColor, imageData);
-    // 		}
-    // 	}
-    // }
+    const mouthDeep = 1;
+    const mouthMargins = 3;
+    const faceColor = { r: 0, g: 0, b: 0 };
+    if (direction == 0) {
+      for (let x = vx + this.size - mouthDeep; x < vx + this.size; x++) {
+        for (let y = vy + mouthMargins; y < vy + this.size - mouthMargins; y++) {
+          this.writeImageDataPixel(x, y, faceColor, imageData);
+        }
+      }
+    }
+    if (direction == 90) {
+      for (let x = vx + mouthMargins; x < vx + this.size - mouthMargins; x++) {
+        for (let y = vy; y < vy + mouthDeep; y++) {
+          this.writeImageDataPixel(x, y, faceColor, imageData);
+        }
+      }
+    }
+    if (direction == 180) {
+      for (let x = vx; x < vx + mouthDeep; x++) {
+        for (let y = vy + mouthMargins; y < vy + this.size - mouthMargins; y++) {
+          this.writeImageDataPixel(x, y, faceColor, imageData);
+        }
+      }
+    }
+    if (direction == 270) {
+      for (let x = vx + mouthMargins; x < vx + this.size - mouthMargins; x++) {
+        for (let y = vy + this.size - mouthDeep; y < vy + this.size; y++) {
+          this.writeImageDataPixel(x, y, faceColor, imageData);
+        }
+      }
+    }
   }
 
   writeImageDataPixel(x, y, color, imageData) {
@@ -242,15 +330,35 @@ class GamePerformer {
     this.drawer.redraw();
     t1 = performance.now() - t1;
 
-    if (counter % 11 === 0) {
-      console.log(`perf: ${t0}, ${t1} milliseconds.`);
-    }
+    window.debugInfo1 = `${counter} ${Date.now()} perf: ${t0}, ${t1} milliseconds`;
 
     requestAnimationFrame(() => this.step());
+    // requestAnimationFrame(() => setTimeout(()=>this.step(), 1000));
+  }
+
+  stepBusinessLogic() {
+    return new Promise((resolve, _) => {
+      this.world.step();
+      this.drawer.redraw();
+      resolve();
+    }).then((res) => {
+      this.stepBusinessLogic();
+    });
+  }
+
+  stepRedraw() {
+
   }
 
   run() {
+    // this.stepBusinessLogic();
+
     requestAnimationFrame(() => this.step());
+
+    setInterval(() => {
+      console.log(Date.now(), window.debugInfo1);
+    }, 1000);
+
     this.initDebugWindow();
   }
 

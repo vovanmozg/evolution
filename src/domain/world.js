@@ -1,4 +1,4 @@
-import { Bot } from './bot';
+import { Bot, isProcessing } from './bot';
 import { Resource } from './resource';
 import { Mutation } from './mutation';
 import { Program } from './program';
@@ -8,11 +8,10 @@ import { Program } from './program';
  * right - 0, up - 90, left - 180, down - 270. It is angle of rotation counterclockwise.
  */
 
-const WIDTH = 100;
-const HEIGHT = 50;
+const WIDTH = 30;
+const HEIGHT = 20;
 
 export class World {
-
   constructor(width, height) {
     this.width = width; // cols
     this.height = height; // rows
@@ -37,12 +36,12 @@ export class World {
     if (y < 0) y = HEIGHT - 1;
     if (y > HEIGHT - 1) y = 0;
 
-    return { x: x, y: y };
+    return { x, y };
   }
 
   eachCell(performer) {
-    for(let x = 0; x < this.width; x++) {
-      for(let y = 0; y < this.height; y++) {
+    for (let x = 0; x < this.width; x++) {
+      for (let y = 0; y < this.height; y++) {
         performer(x, y);
       }
     }
@@ -51,7 +50,7 @@ export class World {
   eachBot(performer) {
     this.eachCell((x, y) => {
       const bot = Bot.get(this.getCell(x, y));
-      //debug(bot)
+      // debug(bot)
       if (bot) {
         performer(bot);
       }
@@ -59,14 +58,13 @@ export class World {
   }
 
   eachNeighborBot(bot, world, performer) {
-    for(let x = -1; x <= 1; x++) {
-      for(let y = -1; y <= 1; y++) {
+    for (let x = -1; x <= 1; x++) {
+      for (let y = -1; y <= 1; y++) {
         if (x !== 0 && y !== 0) {
-
           const coords = World.normalizeCoords(bot.x + x, bot.y + y);
           const cell = world.getCell(coords.x, coords.y);
           const neighborBot = Bot.get(cell);
-          if(neighborBot && Bot.isProcessing(neighborBot)) {
+          if (neighborBot && isProcessing(neighborBot)) {
             performer(neighborBot);
           }
         }
@@ -75,7 +73,7 @@ export class World {
   }
 
   populate() {
-    //this.populateTest1(); return;
+    // this.populateTest1(); return;
 
     this.eachCell((x, y) => {
       if (Math.random() > 0.90) {
@@ -94,40 +92,37 @@ export class World {
     let a = 0;
     this.eachCell((x, y) => {
       if (Math.random() > 0.9) {
-        a ++;
-        let resource = Resource.generateRandom();
+        a++;
+        const resource = Resource.generateRandom();
         Resource.add(x, y, resource, map);
       }
-      let resourceLight = { light: { type: 'light', power: 1 - y / HEIGHT } };
+      const resourceLight = { light: { type: 'light', power: 1 - y / HEIGHT } };
       Resource.add(x, y, resourceLight, map);
     });
-    //debug(a)
+    // debug(a)
   }
 
   step() {
     // localStorage.world = JSON.stringify(this.map);
 
     // Perform next action for every Bot
-    this.eachBot( (bot) => {
+    this.eachBot((bot) => {
       Mutation.mutate(bot);
       Program.step(bot, this);
-
       Bot.liveStep(bot);
       Bot.tryDie(bot, this);
     });
-    //debug(this.map[0][0].resources);
+    // debug(this.map[0][0].resources);
 
-    // this.eachBot( bot => {
-    //
-    // });
+    this.flushBotsProcessing();
+  }
 
+  flushBotsProcessing() {
     // Bots perform sequentially, cell by cell, so if bot perform in one cell and moved to other cell,
     // it can lead to repeated performing. On the world step we mark bot as processing and bot will not
     // performed again on this step. After processing bots we should flush bots locks.
-    this.eachBot( bot => bot.processing = false);
+    this.eachBot((bot) => bot.processing = false);
   }
-
-
 
   destroyBot(bot) {
     delete this.getCell(bot.x, bot.y).bot;
@@ -157,7 +152,7 @@ export class World {
 
   /* PRIVATE */
   initCells() {
-    //debug('initCells');
+    // debug('initCells');
     this.map = [];
     this.eachCell((x, y) => {
       this.initCell(x, y);
@@ -170,22 +165,21 @@ export class World {
     if (this.map[x][y].bot) {
       throw `Bot already exists in cell ${x}:${y}`;
     }
-    //debug('addBot');
+    // debug('addBot');
     this.map[x][y].bot = bot;
   }
 
   print() {
     let s = '';
-    for(let y = 0; y < this.height; y++) {
-      for(let x = 0; x < this.width; x++) {
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
         s += this.map[x][y].bot ? 1 : '.';
       }
-      s += "\n";
+      s += '\n';
     }
-    //debug(s);
+    // debug(s);
   }
 }
-
 
 // Creates world with population
 export class WorldCreator {
