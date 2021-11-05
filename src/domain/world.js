@@ -8,8 +8,8 @@ import { Program } from './program';
  * right - 0, up - 90, left - 180, down - 270. It is angle of rotation counterclockwise.
  */
 
-const WIDTH = 30;
-const HEIGHT = 20;
+const WIDTH = 100;
+const HEIGHT = 50;
 
 export class World {
   constructor(width, height) {
