@@ -106,6 +106,28 @@ class Drawer {
     }
   }
 
+  // Generates color depending on program
+  getColor(bot) {
+    const dots = [
+      0,
+      0.15,
+      0.3,
+      0.45,
+      0.6,
+      0.75,
+      0.9
+    ];
+
+    const weights = bot.program.commands.map((operation) => {
+      return dots[operation]
+    });
+
+    const sum = weights.reduce((a, b) => a + b, 0);
+    const avg = (sum / weights.length) || 0;
+
+    return HSVtoRGB(bot.style.h, bot.style.s, avg);
+  }
+
   drawBot(bot, imageData) {
     let color;
     // if (bot.options.hasBotInFront) {
@@ -116,10 +138,14 @@ class Drawer {
     // const g = 128 + parseInt(parseFloat(bot.id) * 128);
 
     // color = { r: 0, g: g, b: 100 };
-    color = HSVtoRGB(bot.style.h, bot.style.s, bot.style.v);
+    //color = HSVtoRGB(bot.style.h, bot.style.s, bot.style.v);
+    //color = {r: bot.style.h * 255, g: bot.style.s * 255, b: bot.style.v * 255}
+
 
     // }
-    bot = this.setColor(bot);
+    //bot = this.setColor(bot);
+    color = this.getColor(bot);
+
 
     const x = bot.x * this.size;
     const y = bot.y * this.size;
