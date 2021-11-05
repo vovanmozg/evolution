@@ -19,7 +19,6 @@ const DEFAULT_BOT = {
 
 };
 
-
 function shifts() {
   return [[1, 0], [0, -1], [-1, 0], [0, 1]];
   //      left    top      right    bottom
@@ -36,7 +35,7 @@ function rightCyclicShift(ar) {
 * @param rotate {Number} can be 1 (clockwise) or -1 (counterclockwise)
 */
 function rotate1(direction, rotate) {
-  return (((direction) + rotate) & 3);
+  return ((direction + rotate) & 3);
 }
 
 /*
@@ -44,7 +43,7 @@ function rotate1(direction, rotate) {
 * @param rotate {Number} can be 1 (clockwise) or -1 (counterclockwise)
 */
 function rotate2(direction, rotate) {
-  return (((direction) + rotate) & 3);
+  return ((direction + rotate) & 3);
 }
 
 // function rightPosition(bot) {
@@ -62,6 +61,34 @@ function rotate2(direction, rotate) {
 // function bottomPosition(bot) {
 //   return World.normalizeCoords(bot.x + 0, bot.y + 1);
 // }
+
+
+function cloneBot(bot, changes = {}) {
+  return {
+    x: changes.x === undefined ? bot.x : changes.x,
+    y: changes.y === undefined ? bot.y : changes.y,
+    id: changes.id === undefined ? bot.id : changes.id,
+    direction: changes.direction === undefined ? bot.direction : changes.direction,
+    xp: changes.xp === undefined ? bot.xp : changes.xp,
+
+    rotate: bot.rotate,
+    program: {
+      commands: bot.program.commands.slice(),
+      current: bot.program.current,
+    },
+    options: Object.assign({}, bot.options),
+    style: {
+      h: bot.style.h,
+      s: bot.style.s,
+      v: bot.style.v
+    },
+    processing: bot.processing,
+  };
+}
+
+function isProcessing(bot) {
+  return bot.processing === false;
+}
 
 class Bot {
   static DEFAULT_XP = 10;
@@ -101,13 +128,6 @@ class Bot {
     return World.normalizeCoords(bot.x + shift[0], bot.y + shift[1]);
   }
 
-  static cloneBot(bot, changes = {}) {
-    const newBot = JSON.parse(JSON.stringify(bot));
-    return {
-      ...newBot,
-      ...changes,
-    }
-  }
 
   static generateId() {
     return '' + Math.random();
@@ -121,16 +141,17 @@ class Bot {
   static tryDie(bot, world) {
     if (bot.xp <= 0) {
       world.destroyBot(bot);
-
+      //if (Math.random() > 0.3) {
       const resource = Resource.generateRandom();
-
       Resource.add(bot.x, bot.y, resource, world.map);
+      //}
     }
-  }
-
-  static isProcessing(bot) {
-    return bot.processing == false
   }
 }
 
-export { Bot, DEFAULT_BOT };
+export {
+  Bot,
+  cloneBot,
+  isProcessing,
+  DEFAULT_BOT
+};
