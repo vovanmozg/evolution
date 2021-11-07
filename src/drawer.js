@@ -3,18 +3,48 @@ import {
   BOTTOM, LEFT, RIGHT, TOP,
 } from './domain/bot';
 
+/* accepts parameters
+ * h  Object = {h:x, s:y, v:z}
+ * OR
+ * h, s, v
+ * https://stackoverflow.com/questions/17242144/javascript-convert-hsb-hsv-color-to-rgb-accurately
+*/
+function HSVtoRGB(h, s, v) {
+  let r; let g; let b;
+  if (arguments.length === 1) {
+    s = h.s; v = h.v; h = h.h;
+  }
+  const i = Math.floor(h * 6);
+  const f = h * 6 - i;
+  const p = v * (1 - s);
+  const q = v * (1 - f * s);
+  const t = v * (1 - (1 - f) * s);
+  switch (i % 6) { // eslint-disable-line default-case
+    case 0: r = v; g = t; b = p; break;
+    case 1: r = q; g = v; b = p; break;
+    case 2: r = p; g = v; b = t; break;
+    case 3: r = p; g = q; b = v; break;
+    case 4: r = t; g = p; b = v; break;
+    case 5: r = v; g = p; b = q; break;
+  }
+  return {
+    r: Math.round(r * 255),
+    g: Math.round(g * 255),
+    b: Math.round(b * 255),
+  };
+}
+
 class Drawer {
   constructor(world) {
     this.world = world;
+
     this.size = 10; // size of shulker
 
     const canvas = document.getElementById('cnv');
+    this.ctx = canvas.getContext('2d');
+    this.ctx.imageSmoothingEnabled = false;
     canvas.width = WIDTH * this.size;
     canvas.height = HEIGHT * this.size;
-    // canvas.style.width = WIDTH * 10;
-    // canvas.style.height = HEIGHT * 10;
-    this.ctx = canvas.getContext('2d');
-    // this.ctx.imageSmoothingEnabled = false;
   }
 
   redraw() {
@@ -29,18 +59,12 @@ class Drawer {
     }
 
     // Draw resources
-    let a = 0;
     this.world.eachCell((x, y) => {
       const cell = this.world.getCell(x, y);
       if (cell.resources) {
-        if (cell.resources.food) {
-          a++;
-        }
-
         this.drawResource(x, y, cell.resources, imageData);
       }
     });
-    // debug(`cells: ${a}`)
 
     // Draw bots
     this.world.eachBot((bot) => {
@@ -62,8 +86,8 @@ class Drawer {
   }
 
   writeImageDataResource(vx, vy, color, imageData) {
-    for (let x = vx + 3; x < vx + this.size - 3; x++) {
-      for (let y = vy + 3; y < vy + this.size - 3; y++) {
+    for (let x = vx + 3; x < vx + this.size - 3; x += 1) {
+      for (let y = vy + 3; y < vy + this.size - 3; y += 1) {
         this.writeImageDataPixel(x, y, color, imageData);
       }
     }
@@ -87,12 +111,9 @@ class Drawer {
     const avg = (sum / weights.length) || 0;
 
     return HSVtoRGB(bot.style.h, bot.style.s, avg);
-  }
 
-  drawBot(bot, imageData) {
-    let color;
     // if (bot.options.hasBotInFront) {
-    //	color = { r: 255, g: 0, b: 0 };
+    // color = { r: 255, g: 0, b: 0 };
     // } else {
     // Bot becomes dark if hungry
 
@@ -104,11 +125,12 @@ class Drawer {
 
     // }
     // bot = this.setColor(bot);
-    color = this.getColor(bot);
+  }
 
+  drawBot(bot, imageData) {
+    const color = this.getColor(bot);
     const x = bot.x * this.size;
     const y = bot.y * this.size;
-
     this.writeImageDataBot(x, y, bot, bot.direction, color, imageData);
   }
 
@@ -206,8 +228,8 @@ class Drawer {
       }
     }
 
-    for (let x = mainBodyLeftX; x <= mainBodyRightX; x++) {
-      for (let y = mainBodyTopY; y <= mainBodyBottomY; y++) {
+    for (let x = mainBodyLeftX; x <= mainBodyRightX; x += 1) {
+      for (let y = mainBodyTopY; y <= mainBodyBottomY; y += 1) {
         if (!this.inMouth(x, y, lmouth)) {
           this.writeImageDataPixel(x, y, color, imageData);
         }
@@ -221,83 +243,16 @@ class Drawer {
     return x >= mouth[0] && x <= mouth[2] && y >= mouth[1] && y <= mouth[3];
   }
 
-  drawMouth(vx, vy, direction, imageData) {
-    // //Draw mouth (face)
-    const mouthDeep = 1;
-    const mouthMargins = 3;
-    const faceColor = { r: 0, g: 0, b: 0 };
-    if (direction == 0) {
-      for (let x = vx + this.size - mouthDeep; x < vx + this.size; x++) {
-        for (let y = vy + mouthMargins; y < vy + this.size - mouthMargins; y++) {
-          this.writeImageDataPixel(x, y, faceColor, imageData);
-        }
-      }
-    }
-    if (direction == 90) {
-      for (let x = vx + mouthMargins; x < vx + this.size - mouthMargins; x++) {
-        for (let y = vy; y < vy + mouthDeep; y++) {
-          this.writeImageDataPixel(x, y, faceColor, imageData);
-        }
-      }
-    }
-    if (direction == 180) {
-      for (let x = vx; x < vx + mouthDeep; x++) {
-        for (let y = vy + mouthMargins; y < vy + this.size - mouthMargins; y++) {
-          this.writeImageDataPixel(x, y, faceColor, imageData);
-        }
-      }
-    }
-    if (direction == 270) {
-      for (let x = vx + mouthMargins; x < vx + this.size - mouthMargins; x++) {
-        for (let y = vy + this.size - mouthDeep; y < vy + this.size; y++) {
-          this.writeImageDataPixel(x, y, faceColor, imageData);
-        }
-      }
-    }
-  }
-
   writeImageDataPixel(x, y, color, imageData) {
     let index = ((y * (WIDTH * this.size * 4)) + (x * 4)) + 0;
     imageData.data[index] = color.r;
-    index++;
+    index += 1;
     imageData.data[index] = color.g;
-    index++;
+    index += 1;
     imageData.data[index] = color.b;
-    index++;
+    index += 1;
     imageData.data[index] = color.a === undefined ? 255 : color.a;
   }
-}
-
-/* accepts parameters
- * h  Object = {h:x, s:y, v:z}
- * OR
- * h, s, v
- * https://stackoverflow.com/questions/17242144/javascript-convert-hsb-hsv-color-to-rgb-accurately
-*/
-function HSVtoRGB(h, s, v) {
-  let r; let g; let b; let i; let f; let p; let q; let
-    t;
-  if (arguments.length === 1) {
-    s = h.s, v = h.v, h = h.h;
-  }
-  i = Math.floor(h * 6);
-  f = h * 6 - i;
-  p = v * (1 - s);
-  q = v * (1 - f * s);
-  t = v * (1 - (1 - f) * s);
-  switch (i % 6) {
-    case 0: r = v, g = t, b = p; break;
-    case 1: r = q, g = v, b = p; break;
-    case 2: r = p, g = v, b = t; break;
-    case 3: r = p, g = q, b = v; break;
-    case 4: r = t, g = p, b = v; break;
-    case 5: r = v, g = p, b = q; break;
-  }
-  return {
-    r: Math.round(r * 255),
-    g: Math.round(g * 255),
-    b: Math.round(b * 255),
-  };
 }
 
 export {

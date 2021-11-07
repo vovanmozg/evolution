@@ -1,4 +1,5 @@
 import { OPERATIONS } from './program';
+import { arRandom } from '../utils';
 
 export class Mutation {
   static MUTATION_PROBABILITY = 0.001;
@@ -17,7 +18,7 @@ export class Mutation {
 
     const position = Math.floor(Math.random() * bot.program.commands.length);
 
-    mutations.random()(bot.program.commands, position);
+    arRandom(mutations)(bot.program.commands, position);
 
     bot.style.h = this.randomChangeStyleComponent(bot.style.h);
     bot.style.s = this.randomChangeStyleComponent(bot.style.s);
@@ -69,6 +70,6 @@ export class Mutation {
   }
 
   static randomOperationCode() {
-    return Object.values(OPERATIONS).random();
+    return arRandom(Object.values(OPERATIONS));
   }
 }
