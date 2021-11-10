@@ -1,5 +1,5 @@
 import {
-  eachBot, eachCell, HEIGHT, WIDTH,
+  eachBot, eachCell,
 } from './domain/world';
 import Bot from './domain/bot';
 import { getCell } from './domain/world/map_modifier';
@@ -46,15 +46,15 @@ class Drawer {
     const canvas = document.getElementById('cnv');
     this.ctx = canvas.getContext('2d');
     this.ctx.imageSmoothingEnabled = false;
-    canvas.width = WIDTH * this.size;
-    canvas.height = HEIGHT * this.size;
+    canvas.width = 100 * this.size;
+    canvas.height = 40 * this.size;
   }
 
   redraw() {
-    const imageData = this.ctx.createImageData(WIDTH * this.size, HEIGHT * this.size);
+    const imageData = this.ctx.createImageData(100 * this.size, 40 * this.size);
 
     // Fill entire canvas with black
-    for (let i = 0; i < WIDTH * this.size * HEIGHT * this.size * 4; i += 4) {
+    for (let i = 0; i < 100 * this.size * 40 * this.size * 4; i += 4) {
       imageData.data[i] = 0;
       imageData.data[i + 1] = 0;
       imageData.data[i + 2] = 0;
@@ -243,7 +243,7 @@ class Drawer {
   }
 
   writeImageDataPixel(x, y, color, imageData) {
-    let index = y * WIDTH * this.size * 4 + x * 4;
+    let index = y * 100 * this.size * 4 + x * 4;
     imageData.data[index] = color.r;
     index += 1;
     imageData.data[index] = color.g;

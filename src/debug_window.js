@@ -1,4 +1,4 @@
-import { HEIGHT, WIDTH } from './domain/world/constants';
+// import { 40, 100 } from './domain/world/constants';
 import { getBot } from './domain/world/bot_finder';
 
 const debugOptions = {};
@@ -8,8 +8,8 @@ let counter = 0;
 // global vars for this module
 const cnv = document.getElementById('cnv');
 const info = document.getElementById('info');
-const botWidth = cnv.clientWidth / WIDTH;
-const botHeight = cnv.clientHeight / HEIGHT;
+const botWidth = cnv.clientWidth / 100;
+const botHeight = cnv.clientHeight / 40;
 
 const updateDebugOptions = () => {
   if (debugOptions.botX === undefined) return;

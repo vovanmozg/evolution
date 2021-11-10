@@ -6,7 +6,7 @@ import {
 import { add as addResource, generateRandom as generateRandomResource } from './resource';
 import { mutate } from './mutation';
 import { generate, step as programStep } from './program';
-import { HEIGHT, WIDTH } from './world/constants';
+//import { 40, 100 } from './world/constants';
 import { getBot } from './world/bot_finder';
 import { addBot } from './world/map_modifier';
 
@@ -16,8 +16,8 @@ import { addBot } from './world/map_modifier';
  */
 
 function eachCell(world, performer) {
-  for (let x = 0; x < WIDTH; x += 1) {
-    for (let y = 0; y < HEIGHT; y += 1) {
+  for (let x = 0; x < 100; x += 1) {
+    for (let y = 0; y < 40; y += 1) {
       performer(x, y);
     }
   }
@@ -75,7 +75,7 @@ function initResources(world) {
       const resource = generateRandomResource();
       addResource(x, y, resource, world.map);
     }
-    const resourceLight = { light: { type: 'light', power: 1 - y / HEIGHT } };
+    const resourceLight = { light: { type: 'light', power: 1 - y / 40 } };
     addResource(x, y, resourceLight, world.map);
   });
 }
@@ -130,8 +130,6 @@ function createWorld() {
 }
 
 export {
-  WIDTH,
-  HEIGHT,
   createWorld,
   eachBot,
   eachCell,
