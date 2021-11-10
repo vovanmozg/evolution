@@ -1,5 +1,5 @@
-import { Bot } from './domain/bot';
-import { HEIGHT, WIDTH } from './domain/world';
+import { HEIGHT, WIDTH } from './domain/world/constants';
+import { getBot } from './domain/world/bot_finder';
 
 const debugOptions = {};
 let world;
@@ -14,13 +14,7 @@ const botHeight = cnv.clientHeight / HEIGHT;
 const updateDebugOptions = () => {
   if (debugOptions.botX === undefined) return;
   if (debugOptions.botY === undefined) return;
-
-  debugOptions.bot = Bot.get(
-    world.getCell(
-      debugOptions.botX,
-      debugOptions.botY,
-    ),
-  );
+  debugOptions.bot = getBot(debugOptions.botX, debugOptions.botY, world.map);
 };
 
 const handleClick = (e) => {
@@ -49,7 +43,6 @@ function initDebugWindow(worldObject) {
   cnv.addEventListener('mousedown', handleClick);
 
   setInterval(updateDebugWindow, 1000);
-  // requestAnimationFrame(() => updateDebugWindow());
 }
 
 function onTick(times) {

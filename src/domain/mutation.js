@@ -1,12 +1,13 @@
-import { OPERATIONS } from './program';
+import { OPERATIONS } from './program/constants';
+
 import { arRandom } from '../utils';
 
-export class Mutation {
-  static MUTATION_PROBABILITY = 0.001;
+const MUTATION_PROBABILITY = 0.001;
 
+export class Mutation {
   static mutate(bot) {
     // Mutations are very rare
-    if (Math.random() > Mutation.MUTATION_PROBABILITY) {
+    if (Math.random() > MUTATION_PROBABILITY) {
       return;
     }
 
@@ -24,8 +25,6 @@ export class Mutation {
     bot.style.s = this.randomChangeStyleComponent(bot.style.s);
     bot.style.v = this.randomChangeStyleComponent(bot.style.v); //  * (bot.xp * 2 / 255)
 
-
-
     // // Substitution
     // bot.program.commands[position] = this.randomOperationCode();
     //
@@ -36,9 +35,8 @@ export class Mutation {
     // bot.program.commands.splice(position, 0, this.randomOperationCode());
   }
 
-
   static randomChangeStyleComponent(value) {
-    const minComponentValue = 0;
+    // const minComponentValue = 0;
     const maxComponentValue = 1;
     const change = maxComponentValue / 100;
     let sign = Math.random() > 0.5 ? 1 : -1;
@@ -54,7 +52,6 @@ export class Mutation {
     return commands;
   }
 
-
   static mutateDeletion(commands, position) {
     commands.splice(position, 1);
     return commands;
@@ -65,9 +62,9 @@ export class Mutation {
     return commands;
   }
 
-  static randomOperationsPosition(commands) {
-    return Math.floor(Math.random() * bot.program.commands.length);
-  }
+  // static randomOperationsPosition(commands) {
+  //   return Math.floor(Math.random() * bot.program.commands.length);
+  // }
 
   static randomOperationCode() {
     return arRandom(Object.values(OPERATIONS));

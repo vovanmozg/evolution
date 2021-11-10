@@ -1,5 +1,5 @@
 import { Drawer } from './drawer';
-import { WorldCreator } from './domain/world';
+import { createWorld } from './domain/world';
 import { initDebugWindow, onTick } from './debug_window';
 
 let worldStep;
@@ -36,7 +36,7 @@ function run(world, drawer) {
 }
 
 function perform() {
-  const world = WorldCreator.create();
+  const world = createWorld();
   const drawer = new Drawer(world);
   run(world, drawer);
 }

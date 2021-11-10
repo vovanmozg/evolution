@@ -21,6 +21,7 @@ module.exports = {
   rules: {
     'class-methods-use-this': 'off',
     'import/prefer-default-export': 'off',
+    'no-bitwise': 'off',
     'no-param-reassign': 'off',
     'no-underscore-dangle': ['error', { allow: ['_id', '_type'] }],
     'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],

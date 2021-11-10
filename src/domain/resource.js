@@ -1,19 +1,22 @@
-import { World } from './world';
+// import { validateCoords } from './world';
 
-export class Resource {
-  static add(x, y, resource, map) {
-    World.validateCoords(x, y);
-    map[x][y].resources = {
-      ...map[x][y].resources,
-      ...resource,
-    };
-  }
-
-  static generateRandom() {
-    return {
-      food: {
-        type: 'food',
-      },
-    };
-  }
+function add(x, y, resource, map) {
+  // validateCoords(x, y);
+  map[x][y].resources = {
+    ...map[x][y].resources,
+    ...resource,
+  };
 }
+
+function generateRandom() {
+  return {
+    food: {
+      type: 'food',
+    },
+  };
+}
+
+export {
+  add,
+  generateRandom,
+};

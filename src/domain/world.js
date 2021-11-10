@@ -1,15 +1,30 @@
-import { Bot, isProcessing } from './bot';
-import { Resource } from './resource';
+import {
+  generateRandom as botGenerateRandom,
+  liveStep as botLiveStep,
+  tryDie,
+} from './bot';
+import { add as addResource, generateRandom as generateRandomResource } from './resource';
 import { Mutation } from './mutation';
-import { Program } from './program';
+import { generate, step as programStep } from './program';
+import { HEIGHT, WIDTH } from './world/constants';
+import { getBot } from './world/bot_finder';
 
 /**
  * Bot has 4 directions: right, up, left, down. Direction stored as code:
- * right - 0, up - 90, left - 180, down - 270. It is angle of rotation counterclockwise.
+ * right - 0, up - 1, left - 2, down - 3. It is angle of rotation counterclockwise divided by 90.
  */
 
-const WIDTH = 100;
-const HEIGHT = 50;
+const validateCoords = (x, y) => {
+  if (x >= WIDTH || x < 0) {
+    throw new Error(`x should be from 0 to ${WIDTH}`);
+  }
+
+  if (y >= HEIGHT || y < 0) {
+    throw new Error(`x should be from 0 to ${WIDTH}`);
+  }
+};
+
+// const getBot = (cell) => cell.bot;
 
 export class World {
   constructor(width, height) {
@@ -20,28 +35,9 @@ export class World {
     window.debugWorld = this;
   }
 
-  static validateCoords(x, y) {
-    if (x >= WIDTH || x < 0) {
-      throw `x should be from 0 to ${WIDTH}`;
-    }
-
-    if (y >= HEIGHT || y < 0) {
-      throw `x should be from 0 to ${WIDTH}`;
-    }
-  }
-
-  static normalizeCoords(x, y) {
-    if (x < 0) x = WIDTH - 1;
-    if (x > WIDTH - 1) x = 0;
-    if (y < 0) y = HEIGHT - 1;
-    if (y > HEIGHT - 1) y = 0;
-
-    return { x, y };
-  }
-
   eachCell(performer) {
-    for (let x = 0; x < this.width; x++) {
-      for (let y = 0; y < this.height; y++) {
+    for (let x = 0; x < this.width; x += 1) {
+      for (let y = 0; y < this.height; y += 1) {
         performer(x, y);
       }
     }
@@ -49,7 +45,7 @@ export class World {
 
   eachBot(performer) {
     this.eachCell((x, y) => {
-      const bot = Bot.get(this.getCell(x, y));
+      const bot = getBot(x, y, this.map);
       // debug(bot)
       if (bot) {
         performer(bot);
@@ -57,49 +53,25 @@ export class World {
     });
   }
 
-  eachNeighborBot(bot, world, performer) {
-    for (let x = -1; x <= 1; x++) {
-      for (let y = -1; y <= 1; y++) {
-        if (x !== 0 && y !== 0) {
-          const coords = World.normalizeCoords(bot.x + x, bot.y + y);
-          const cell = world.getCell(coords.x, coords.y);
-          const neighborBot = Bot.get(cell);
-          if (neighborBot && isProcessing(neighborBot)) {
-            performer(neighborBot);
-          }
-        }
-      }
-    }
-  }
-
   populate() {
     // this.populateTest1(); return;
 
     this.eachCell((x, y) => {
       if (Math.random() > 0.90) {
-        this.addBot(x, y, Bot.generateRandom(x, y));
+        this.addBot(x, y, botGenerateRandom(x, y, generate));
       }
-    });
-  }
-
-  populateTest1() {
-    TEST_CASES[2].forEach((botOptions) => {
-      this.addBot(botOptions.x, botOptions.y, botOptions);
     });
   }
 
   initResources(map) {
-    let a = 0;
     this.eachCell((x, y) => {
       if (Math.random() > 0.9) {
-        a++;
-        const resource = Resource.generateRandom();
-        Resource.add(x, y, resource, map);
+        const resource = generateRandomResource();
+        addResource(x, y, resource, map);
       }
       const resourceLight = { light: { type: 'light', power: 1 - y / HEIGHT } };
-      Resource.add(x, y, resourceLight, map);
+      addResource(x, y, resourceLight, map);
     });
-    // debug(a)
   }
 
   step() {
@@ -108,9 +80,16 @@ export class World {
     // Perform next action for every Bot
     this.eachBot((bot) => {
       Mutation.mutate(bot);
-      Program.step(bot, this);
-      Bot.liveStep(bot);
-      Bot.tryDie(bot, this);
+      programStep(bot, this);
+      botLiveStep(bot);
+
+      const onDie = (deadBot, map) => {
+        // if (Math.random() > 0.3) {
+        const resource = generateRandomResource();
+        addResource(deadBot.x, deadBot.y, resource, map);
+        // }
+      };
+      tryDie(bot, this, onDie);
     });
     // debug(this.map[0][0].resources);
 
@@ -118,10 +97,13 @@ export class World {
   }
 
   flushBotsProcessing() {
-    // Bots perform sequentially, cell by cell, so if bot perform in one cell and moved to other cell,
-    // it can lead to repeated performing. On the world step we mark bot as processing and bot will not
-    // performed again on this step. After processing bots we should flush bots locks.
-    this.eachBot((bot) => bot.processing = false);
+    // Bots perform sequentially, cell by cell, so if bot perform in one cell and moved to other
+    // cell, it can lead to repeated performing. On the world step we mark bot as processing and
+    // bot will not performed again on this step. After processing bots we should flush bots
+    // locks.
+    this.eachBot((bot) => {
+      bot.processing = false;
+    });
   }
 
   destroyBot(bot) {
@@ -130,10 +112,6 @@ export class World {
 
   getCell(x, y) {
     return this.map[x][y];
-  }
-
-  setCellProps(x, y, value, map) {
-    map[x][y] = { ...map[x][y], ...value };
   }
 
   initCell(x, y, value = undefined) {
@@ -160,41 +138,42 @@ export class World {
   }
 
   addBot(x, y, bot) {
-    World.validateCoords(x, y);
+    validateCoords(x, y);
 
     if (this.map[x][y].bot) {
-      throw `Bot already exists in cell ${x}:${y}`;
+      throw new Error(`Bot already exists in cell ${x}:${y}`);
     }
     // debug('addBot');
     this.map[x][y].bot = bot;
   }
 
-  print() {
-    let s = '';
-    for (let y = 0; y < this.height; y++) {
-      for (let x = 0; x < this.width; x++) {
-        s += this.map[x][y].bot ? 1 : '.';
-      }
-      s += '\n';
-    }
-    // debug(s);
-  }
+  // print() {
+  //   let s = '';
+  //   for (let y = 0; y < this.height; y += 1) {
+  //     for (let x = 0; x < this.width; x += 1) {
+  //       s += this.map[x][y].bot ? 1 : '.';
+  //     }
+  //     s += '\n';
+  //   }
+  //   debug(s);
+  // }
 }
 
 // Creates world with population
-export class WorldCreator {
-  static create() {
-    // Create world as matrix
-    const world = new World(WIDTH, HEIGHT);
-    // Create bots in world
-    world.populate();
-    world.initResources(world.map);
+function createWorld() {
+  // Create world as matrix
+  const world = new World(WIDTH, HEIGHT);
+  // Create bots in world
+  world.populate();
+  world.initResources(world.map);
 
-    return world;
-  }
+  return world;
 }
 
 export {
   WIDTH,
   HEIGHT,
+  createWorld,
+  validateCoords,
+  getBot,
 };

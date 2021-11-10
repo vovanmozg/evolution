@@ -71,3 +71,8 @@ test('Clones bot', () => {
 //     },
 //   ],
 // ];
+// populateTest1() {
+//   TEST_CASES[2].forEach((botOptions) => {
+//     this.addBot(botOptions.x, botOptions.y, botOptions);
+//   });
+// }

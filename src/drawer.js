@@ -1,7 +1,5 @@
 import { HEIGHT, WIDTH } from './domain/world';
-import {
-  BOTTOM, LEFT, RIGHT, TOP,
-} from './domain/bot';
+import Bot from './domain/bot';
 
 /* accepts parameters
  * h  Object = {h:x, s:y, v:z}
@@ -33,6 +31,8 @@ function HSVtoRGB(h, s, v) {
     b: Math.round(b * 255),
   };
 }
+
+const inMouth = (x, y, mouth) => x >= mouth[0] && x <= mouth[2] && y >= mouth[1] && y <= mouth[3];
 
 class Drawer {
   constructor(world) {
@@ -176,25 +176,25 @@ class Drawer {
     const mouthDepth = 1;
 
     const mouth = {
-      [RIGHT]: [
+      [Bot.RIGHT]: [
         botRightX - mouthDepth,
         botTopY + mouthMargin,
         botRightX,
         botBottomY - mouthMargin,
       ],
-      [TOP]: [
+      [Bot.TOP]: [
         botLeftX + mouthMargin,
         botTopY,
         botRightX - mouthMargin,
         botTopY + mouthDepth,
       ],
-      [LEFT]: [
+      [Bot.LEFT]: [
         botLeftX,
         botTopY + mouthMargin,
         botLeftX + mouthDepth,
         botBottomY - mouthMargin,
       ],
-      [BOTTOM]: [
+      [Bot.BOTTOM]: [
         botLeftX + mouthMargin,
         botBottomY - mouthDepth,
         botRightX - mouthMargin,
@@ -206,41 +206,37 @@ class Drawer {
 
     for (let y = mainBodyTopY; y <= mainBodyBottomY; y += 1) {
       // Left border
-      if (!this.inMouth(botLeftX, y, lmouth)) {
+      if (!inMouth(botLeftX, y, lmouth)) {
         this.writeImageDataPixel(botLeftX, y, color, imageData);
       }
 
       // Right border
-      if (!this.inMouth(botRightX, y, lmouth)) {
+      if (!inMouth(botRightX, y, lmouth)) {
         this.writeImageDataPixel(botRightX, y, color, imageData);
       }
     }
 
     for (let x = mainBodyLeftX; x <= mainBodyRightX; x += 1) {
       // Top border
-      if (!this.inMouth(x, botTopY, lmouth)) {
+      if (!inMouth(x, botTopY, lmouth)) {
         this.writeImageDataPixel(x, botTopY, color, imageData); // {r: 255, g: 255, b: 255}
       }
 
       // Bottom border
-      if (!this.inMouth(x, botBottomY, lmouth)) {
+      if (!inMouth(x, botBottomY, lmouth)) {
         this.writeImageDataPixel(x, botBottomY, color, imageData);
       }
     }
 
     for (let x = mainBodyLeftX; x <= mainBodyRightX; x += 1) {
       for (let y = mainBodyTopY; y <= mainBodyBottomY; y += 1) {
-        if (!this.inMouth(x, y, lmouth)) {
+        if (!inMouth(x, y, lmouth)) {
           this.writeImageDataPixel(x, y, color, imageData);
         }
       }
     }
 
     // this.drawMouth(vx, vy, direction, imageData);
-  }
-
-  inMouth(x, y, mouth) {
-    return x >= mouth[0] && x <= mouth[2] && y >= mouth[1] && y <= mouth[3];
   }
 
   writeImageDataPixel(x, y, color, imageData) {
