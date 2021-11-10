@@ -1,6 +1,7 @@
 import { Drawer } from './drawer';
 import { createWorld, step as worldStep } from './domain/world';
 import { initDebugWindow, onTick } from './debug_window';
+// import M from './random.js';
 
 let redraw;
 
