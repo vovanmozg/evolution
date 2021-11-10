@@ -1,18 +1,17 @@
 import { Drawer } from './drawer';
-import { createWorld } from './domain/world';
+import { createWorld, step as worldStep } from './domain/world';
 import { initDebugWindow, onTick } from './debug_window';
 
-let worldStep;
 let redraw;
 
-function debugPerformance(performer) {
+function debugPerformance(performer, param = undefined) {
   const time = performance.now();
-  performer();
+  performer(param);
   return performance.now() - time;
 }
 
 function step(world) {
-  const t0 = debugPerformance(worldStep);
+  const t0 = debugPerformance(worldStep, world);
   const t1 = debugPerformance(redraw);
   // Print performance debug information
   onTick([t0, t1]);
@@ -21,7 +20,7 @@ function step(world) {
 }
 
 function run(world, drawer) {
-  worldStep = world.step.bind(world);
+  // worldStep = world.step.bind(world);
   redraw = drawer.redraw.bind(drawer);
 
   // this.stepBusinessLogic();

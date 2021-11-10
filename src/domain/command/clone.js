@@ -1,5 +1,6 @@
 import Bot from '../bot';
 import { backPosition, getBot } from '../world/bot_finder';
+import { addBot } from '../world/map_modifier';
 
 const CLONE_RATE = 2;
 
@@ -30,7 +31,7 @@ function execute(bot, world) {
     },
   );
 
-  world.addBot(newBot.x, newBot.y, newBot);
+  addBot(newBot.x, newBot.y, newBot, world.map);
 }
 
 export default {

@@ -1,3 +1,5 @@
+import { removeBot } from './world/map_modifier';
+
 const DEFAULT_BOT = {
   x: 0,
   y: 0,
@@ -124,7 +126,7 @@ function liveStep(bot) {
 
 function tryDie(bot, world, onDie) {
   if (bot.xp <= 0) {
-    world.destroyBot(bot);
+    removeBot(bot.x, bot.y, world.map);
     onDie(bot, world.map);
   }
 }

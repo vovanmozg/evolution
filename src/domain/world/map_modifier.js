@@ -1,4 +1,5 @@
 import { getBot } from './bot_finder';
+import { validateCoords } from './coords';
 
 const setCellProps = (x, y, value, map) => {
   map[x][y] = { ...map[x][y], ...value };
@@ -21,6 +22,25 @@ function moveBot(bot, dest, map) {
   bot.y = dest.y;
 }
 
+function addBot(x, y, bot, map) {
+  validateCoords(x, y);
+
+  if (map[x][y].bot) {
+    throw new Error(`Bot already exists in cell ${x}:${y}`);
+  }
+  // debug('addBot');
+  map[x][y].bot = bot;
+
+  return map;
+}
+
+function getCell(x, y, map) {
+  return map[x][y];
+}
+
 export {
+  addBot,
+  getCell,
   moveBot,
+  removeBot,
 };

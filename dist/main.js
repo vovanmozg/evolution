@@ -1,2 +1,380 @@
-(()=>{"use strict";class t{static rand(){const t=[l.MOVE,l.ROTATE_CLOCKWISE,l.ROTATE_COUNTERCLOCKWISE,l.EAT,l.EAT_SOLAR,l.CLONE,l.OVERPOPULATION];return t[Math.floor(Math.random()*t.length)]}static execute(t,c){if(!0===t.processing)return;t.processing=!0;const h={[l.MOVE]:e,[l.ROTATE_CLOCKWISE]:s,[l.ROTATE_COUNTERCLOCKWISE]:o,[l.EAT]:r,[l.EAT_SOLAR]:i,[l.CLONE]:a,[l.OVERPOPULATION]:n};t.program.current>=t.program.commands.length&&(t.program.current=t.program.commands.length-1);const d=t.program.commands[t.program.current];void 0!==d&&(t.program.current++,t.program.current>=t.program.commands.length&&(t.program.current=0),h[d].execute(t,c),d===l.EAT_SOLAR&&n.execute(t,c))}}class e{static execute(t,e){const{x:s,y:o}=x.frontPosition(t),r=e.getCell(s,o);x.get(r)?t.options={...t.options,hasBotInFront:!0}:(e.setCellProps(s,o,{bot:t},e.map),delete e.getCell(t.x,t.y).bot,t.x=s,t.y=o,t.options={...t.options,hasBotInFront:!1})}}class s{static execute(t,e){t.direction=s.rotate(t.direction,1)}static rotate(t,e){return t+e&3}}class o{static execute(t,e){t.direction=o.rotate(t.direction,-1)}static rotate(t,e){return t+e&3}}class r{static execute(t,e){const s=e.getCell(t.x,t.y);s.resources.food&&(t.xp+=100,t.xp>255&&(t.xp=255),delete s.resources.food)}}class i{static execute(t,e){const s=e.getCell(t.x,t.y);t.xp+=3*s.resources.light.power}}class a{static execute(t,e){const s=x.backPosition(t),o=e.getCell(s.x,s.y);if(x.get(o))return;if(t.xp<2*x.DEFAULT_XP)return;t.xp/=2;const r=x.cloneBot(t,{...s,id:x.generateId(),direction:a.turn(t.direction),xp:x.DEFAULT_XP});e.addBot(r.x,r.y,r)}static turn(t){return t/90+2&3}}class n{static execute(t,e){let s=0;e.eachNeighborBot(t,e,(t=>{s++})),t.xp-=s/3}}class c{static generate(){const e=[];for(let s=0;s<10;s++)e.push(t.rand());return{commands:e,current:0}}static step(e,s){t.execute(e,s)}}const l={MOVE:0,ROTATE_CLOCKWISE:1,ROTATE_COUNTERCLOCKWISE:2,EAT:3,EAT_SOLAR:4,CLONE:5,OVERPOPULATION:6};class h{static MUTATION_PROBABILITY=.001;static mutate(t){if(Math.random()>h.MUTATION_PROBABILITY)return;const e=[(t,e)=>this.mutateSubstitution(t,e),(t,e)=>this.mutateDeletion(t,e),(t,e)=>this.mutateInsertion(t,e)],s=Math.floor(Math.random()*t.program.commands.length);e.random()(t.program.commands,s),t.style.h=this.randomChangeStyleComponent(t.style.h),t.style.s=this.randomChangeStyleComponent(t.style.s),t.style.v=this.randomChangeStyleComponent(t.style.v)}static randomChangeStyleComponent(t){const e=.01;let s=Math.random()>.5?1:-1;return(t+e*s<=0||t+e*s>=1)&&(s*=-1),t+e*s}static mutateSubstitution(t,e){return t[e]=this.randomOperationCode(),t}static mutateDeletion(t,e){return t.splice(e,1),t}static mutateInsertion(t,e){return t.splice(e,0,this.randomOperationCode()),t}static randomOperationsPosition(t){return Math.floor(Math.random()*bot.program.commands.length)}static randomOperationCode(){return Object.values(l).random()}}const d=40,m=20;class u{constructor(t,e){this.width=t,this.height=e,this.initCells(),window.debugWorld=this}static validateCoords(t,e){if(t>=d||t<0)throw"x should be from 0 to 40";if(e>=m||e<0)throw"x should be from 0 to 40"}static normalizeCoords(t,e){return t<0&&(t=39),t>39&&(t=0),e<0&&(e=19),e>19&&(e=0),{x:t,y:e}}eachCell(t){for(let e=0;e<this.width;e++)for(let s=0;s<this.height;s++)t(e,s)}eachBot(t){this.eachCell(((e,s)=>{const o=x.get(this.getCell(e,s));o&&t(o)}))}eachNeighborBot(t,e,s){for(let o=-1;o<=1;o++)for(let r=-1;r<=1;r++)if(0!==o&&0!==r){const i=u.normalizeCoords(t.x+o,t.y+r),a=e.getCell(i.x,i.y),n=x.get(a);n&&x.isProcessing(n)&&s(n)}}populate(){this.eachCell(((t,e)=>{Math.random()>.9&&this.addBot(t,e,x.generateRandom(t,e))}))}populateTest1(){TEST_CASES[2].forEach((t=>{this.addBot(t.x,t.y,t)}))}initResources(t){this.eachCell(((e,s)=>{if(Math.random()>.9){let o=g.generateRandom();g.add(e,s,o,t)}let o={light:{type:"light",power:1-s/m}};g.add(e,s,o,t)}))}step(){this.eachBot((t=>{h.mutate(t),c.step(t,this),x.liveStep(t),x.tryDie(t,this)})),this.eachBot((t=>t.processing=!1))}destroyBot(t){delete this.getCell(t.x,t.y).bot}getCell(t,e){return this.map[t][e]}setCellProps(t,e,s,o){o[t][e]={...o[t][e],...s}}initCell(t,e,s){void 0===s&&(s={resources:{}}),void 0===this.map[t]&&(this.map[t]=[]),this.map[t][e]=s}initCells(){this.map=[],this.eachCell(((t,e)=>{this.initCell(t,e)}))}addBot(t,e,s){if(u.validateCoords(t,e),this.map[t][e].bot)throw`Bot already exists in cell ${t}:${e}`;this.map[t][e].bot=s}print(){let t="";for(let e=0;e<this.height;e++){for(let s=0;s<this.width;s++)t+=this.map[s][e].bot?1:".";t+="\n"}}}class g{static add(t,e,s,o){u.validateCoords(t,e),o[t][e].resources={...o[t][e].resources,...s}}static generateRandom(){return{food:{type:"food"}}}}const p={x:0,y:0,direction:0,id:null,rotate:1,program:{commands:[],current:0},options:{},xp:127,style:{h:1,s:1,b:1}};function C(t){return t.push(t.shift()),t}class x{static DEFAULT_XP=10;static generateRandom(t,e){return{...p,id:x.generateId(),x:t,y:e,direction:Math.floor(4*Math.random()),rotate:Math.random()>.5?1:-1,program:c.generate(),options:{},style:{h:Math.random(),s:Math.random(),v:Math.random()}}}static get(t){return t.bot}static frontPosition(t){const e=[[1,0],[0,-1],[-1,0],[0,1]][t.direction];return u.normalizeCoords(t.x+e[0],t.y+e[1])}static backPosition(t){const e=C(C([[1,0],[0,-1],[-1,0],[0,1]]))[t.direction];return u.normalizeCoords(t.x+e[0],t.y+e[1])}static cloneBot(t,e={}){return{...JSON.parse(JSON.stringify(t)),...e}}static generateId(){return""+Math.random()}static liveStep(t){t.xp--}static tryDie(t,e){if(t.xp<=0){e.destroyBot(t);const s=g.generateRandom();g.add(t.x,t.y,s,e.map)}}static isProcessing(t){return 0==t.processing}}class w{constructor(t){this.world=t,this.size=10;const e=document.getElementById("cnv");e.width=d*this.size,e.height=m*this.size,this.ctx=e.getContext("2d")}redraw(){const t=this.ctx.createImageData(d*this.size,m*this.size);for(let e=0;e<d*this.size*m*this.size*4;e+=4)t.data[e]=0,t.data[e+1]=0,t.data[e+2]=0,t.data[e+3]=255;this.world.eachCell(((e,s)=>{const o=this.world.getCell(e,s);o.resources&&(o.resources.food,this.drawResource(e,s,o.resources,t))})),this.world.eachBot((e=>{this.drawBot(e,t)})),this.ctx.putImageData(t,0,0)}drawResource(t,e,s,o){if(s.food){t*=this.size,e*=this.size;const s={r:140,g:80,b:0};this.writeImageDataResource(t,e,s,o)}}writeImageDataResource(t,e,s,o){for(let r=t+3;r<t+this.size-3;r++)for(let t=e+3;t<e+this.size-3;t++)this.writeImageDataPixel(r,t,s,o)}drawBot(t,e){let s;s=function(t,e,s){let o,r,i,a,n,c,l,h;switch(1===arguments.length&&(e=t.s,s=t.v,t=t.h),a=Math.floor(6*t),n=6*t-a,c=s*(1-e),l=s*(1-n*e),h=s*(1-(1-n)*e),a%6){case 0:o=s,r=h,i=c;break;case 1:o=l,r=s,i=c;break;case 2:o=c,r=s,i=h;break;case 3:o=c,r=l,i=s;break;case 4:o=h,r=c,i=s;break;case 5:o=s,r=c,i=l}return{r:Math.round(255*o),g:Math.round(255*r),b:Math.round(255*i)}}(t.style.h,t.style.s,t.style.v);const o=(t=this.setColor(t)).x*this.size,r=t.y*this.size;this.writeImageDataBot(o,r,t.direction,s,e)}setColor(t){return t}writeImageDataBot(t,e,s,o,r){for(let s=e+1;s<e+this.size-1;s+=1)this.writeImageDataPixel(t,s,o,r),this.writeImageDataPixel(t+this.size-1,s,o,r);for(let s=t+1;s<t+this.size-1;s+=1)this.writeImageDataPixel(s,e,o,r),this.writeImageDataPixel(s,e+this.size-1,o,r);for(let s=t+1;s<t+this.size-1;s++)for(let t=e+1;t<e+this.size-1;t++)this.writeImageDataPixel(s,t,o,r)}writeImageDataPixel(t,e,s,o){let r=e*(d*this.size*4)+4*t+0;o.data[r]=s.r,r++,o.data[r]=s.g,r++,o.data[r]=s.b,r++,o.data[r]=void 0===s.a?255:s.a}}let f=0;class y{constructor(t){if(!t)throw Error("Invalid argument world");this.world=t,this.drawer=new w(t)}step(){let t=performance.now();this.world.step(),t=performance.now()-t,f++;let e=performance.now();this.drawer.redraw(),e=performance.now()-e,f%30==0&&console.log(`${f} ${Date.now()} perf: ${t}, ${e} milliseconds`),requestAnimationFrame((()=>this.step()))}stepBusinessLogic(){return console.log(Date.now()),new Promise(((t,e)=>{this.world.step(),this.drawer.redraw(),t()})).then((t=>{this.stepBusinessLogic()}))}stepRedraw(){}run(){this.stepBusinessLogic(),this.initDebugWindow()}initDebugWindow(){const t=document.getElementById("cnv");document.getElementById("info"),t.addEventListener("mousedown",(e=>{const s=t.clientWidth/d,o=t.clientHeight/m,r=parseInt(e.x/s),i=parseInt(e.y/o);this.debugOptions={botX:r,botY:i}})),requestAnimationFrame((()=>this.updateDebugWindow()))}updateDebugWindow(){if(this.debugOptions){const t=document.getElementById("info"),e=debugWorld.getCell(this.debugOptions.botX,this.debugOptions.botY);let s=x.get(e);s||(s={x:"",y:"",xp:"",program:"",id:""});let o="";o+=`x: ${s.x}</br>`,o+=`y: ${s.y}</br>`,o+=`xp: ${Math.floor(s.xp)}</br>`,o+=`program: ${s.program.commands}</br>`,o+=`id: ${s.id}</br>`,t.innerHTML=o}requestAnimationFrame((()=>this.updateDebugWindow()))}}Array.prototype.random=function(){return this[Math.floor(Math.random()*this.length)]},function(){const t=class{static create(){const t=new u(d,m);return t.populate(),t.initResources(t.map),t}}.create();new y(t).run()}()})();
+(() => {
+  "use strict";
+  const t = 70, e = 40;
+
+  function o(t, e) {
+    return t < 0 && (t = 69), t > 69 && (t = 0), e < 0 && (e = 39), e > 39 && (e = 0), { x: t, y: e }
+  }
+
+  const n = [[1, 0], [0, -1], [-1, 0], [0, 1]], r = (t, e, o) => o && o[t] && o[t][e] && o[t][e].bot;
+
+  function i(t) {
+    return t.push(t.shift()), t
+  }
+
+  const s = (t, e, o) => (delete o[t][e].bot, o);
+
+  function a(o, n, r, i) {
+    if (((o, n) => {
+      if (o >= t || o < 0) throw new Error("x should be from 0 to 70");
+      if (n >= e || n < 0) throw new Error("x should be from 0 to 70")
+    })(o, n), i[o][n].bot) throw new Error(`Bot already exists in cell ${o}:${n}`);
+    return i[o][n].bot = r, i
+  }
+
+  function c(t, e, o) {
+    return o[t][e]
+  }
+
+  const u = {
+    x: 0,
+    y: 0,
+    direction: 0,
+    id: null,
+    rotate: 1,
+    program: { commands: [], current: 0 },
+    options: {},
+    xp: 127,
+    style: { h: 1, s: 1, b: 1 }
+  };
+
+  function d(t) {
+    return !1 === t.processing
+  }
+
+  function m() {
+    return `${Math.random()}`
+  }
+
+  function h(t, e, o) {
+    return {
+      ...u,
+      id: m(),
+      x: t,
+      y: e,
+      direction: Math.floor(4 * Math.random()),
+      rotate: Math.random() > .5 ? 1 : -1,
+      program: o(),
+      options: {},
+      style: { h: Math.random(), s: Math.random(), v: Math.random() }
+    }
+  }
+
+  function l(t) {
+    t.xp -= 1
+  }
+
+  function f(t, e, o) {
+    t.xp <= 0 && (s(t.x, t.y, e.map), o(t, e.map))
+  }
+
+  const p = {
+    generateId: m, generateRandom: h, liveStep: l, tryDie: f, cloneBot: function (t, e = {}) {
+      return {
+        x: void 0 === e.x ? t.x : e.x,
+        y: void 0 === e.y ? t.y : e.y,
+        id: void 0 === e.id ? t.id : e.id,
+        direction: void 0 === e.direction ? t.direction : e.direction,
+        xp: void 0 === e.xp ? t.xp : e.xp,
+        rotate: t.rotate,
+        program: { commands: t.program.commands.slice(), current: t.program.current },
+        options: { ...t.options },
+        style: { h: t.style.h, s: t.style.s, v: t.style.v },
+        processing: t.processing
+      }
+    }, isProcessing: d, DEFAULT_BOT: u, RIGHT: 0, TOP: 1, LEFT: 2, BOTTOM: 3, DEFAULT_XP: 10
+  };
+
+  function g(t, e, o, n) {
+    n[t][e].resources = { ...n[t][e].resources, ...o }
+  }
+
+  const x = {
+    MOVE: 0,
+    CLONE: 1,
+    EAT: 2,
+    EAT_SOLAR: 3,
+    ROTATE_CLOCKWISE: 4,
+    ROTATE_COUNTERCLOCKWISE: 5,
+    OVERPOPULATION: 6
+  };
+
+  function y(t) {
+    return t[Math.floor(Math.random() * t.length)]
+  }
+
+  function E() {
+    return y(Object.values(x))
+  }
+
+  function w(t) {
+    const e = .01;
+    let o = Math.random() > .5 ? 1 : -1;
+    return (t + e * o <= 0 || t + e * o >= 1) && (o *= -1), t + e * o
+  }
+
+  const O = {
+    execute: function (t, e) {
+      const i = function (t) {
+        const e = n[t.direction];
+        return o(t.x + e[0], t.y + e[1])
+      }(t);
+      t.options.hasBotInFront = !!r(i.x, i.y, e.map), t.options.hasBotInFront || function (t, e, o) {
+        if (r(e.x, e.y, o)) throw new Error(`Bot in cell ${e.x}:${e.y} already exists`);
+        ((t, e, o, n) => {
+          n[t][e] = { ...n[t][e], ...o }
+        })(e.x, e.y, { bot: t }, o), s(t.x, t.y, o), t.x = e.x, t.y = e.y
+      }(t, i, e.map)
+    }
+  }, T = {
+    execute: function (t, e) {
+      t.direction = t.direction + 1 & 3
+    }
+  }, I = {
+    execute: function (t, e) {
+      t.direction = t.direction + -1 & 3
+    }
+  }, b = {
+    execute: function (t, e) {
+      const o = c(t.x, t.y, e.map);
+      o.resources.food && (t.xp += 100, t.xp > 255 && (t.xp = 255), delete o.resources.food)
+    }
+  }, M = {
+    execute: function (t, e) {
+      const o = c(t.x, t.y, e.map);
+      t.xp += 3 * o.resources.light.power
+    }
+  }, v = {
+    execute: function (t, e) {
+      const s = function (t) {
+        const e = i(i(n))[t.direction];
+        return o(t.x + e[0], t.y + e[1])
+      }(t);
+      if (r(s.x, s.y, e.map)) return;
+      if (t.xp < 2 * p.DEFAULT_XP) return;
+      t.xp /= 2;
+      const c = p.cloneBot(t, { ...s, id: p.generateId(), direction: (u = t.direction, u + 2 & 3), xp: p.DEFAULT_XP });
+      var u;
+      a(c.x, c.y, c, e.map)
+    }
+  }, A = {
+    execute: function (t, e) {
+      let n = 0;
+      !function (t, e, i, s) {
+        for (let i = -1; i <= 1; i += 1) for (let a = -1; a <= 1; a += 1) if (0 !== i && 0 !== a) {
+          const c = o(t.x + i, t.y + a), u = r(c.x, c.y, e.map);
+          u && s(u) && (n += 1)
+        }
+      }(t, e, 0, d), t.xp -= (t => t / 3)(n)
+    }
+  }, L = function (t, e) {
+    if (!0 === t.processing) return;
+    t.processing = !0;
+    const o = {
+      [x.MOVE]: O,
+      [x.ROTATE_CLOCKWISE]: T,
+      [x.ROTATE_COUNTERCLOCKWISE]: I,
+      [x.EAT]: b,
+      [x.EAT_SOLAR]: M,
+      [x.CLONE]: v,
+      [x.OVERPOPULATION]: A
+    };
+    t.program.current >= t.program.commands.length && (t.program.current = t.program.commands.length - 1);
+    const n = t.program.commands[t.program.current];
+    void 0 !== n && (t.program.current += 1, t.program.current >= t.program.commands.length && (t.program.current = 0), o[n].execute(t, e), n === x.EAT_SOLAR && A.execute(t, e))
+  }, R = function () {
+    const t = [x.MOVE, x.ROTATE_CLOCKWISE, x.ROTATE_COUNTERCLOCKWISE, x.EAT, x.EAT_SOLAR, x.CLONE, x.OVERPOPULATION];
+    return t[Math.floor(Math.random() * t.length)]
+  };
+
+  function C() {
+    const t = [];
+    for (let e = 0; e < 10; e += 1) t.push(R());
+    return { commands: t, current: 0 }
+  }
+
+  function D(o, n) {
+    for (let o = 0; o < t; o += 1) for (let t = 0; t < e; t += 1) n(o, t)
+  }
+
+  function P(t, e) {
+    D(0, ((o, n) => {
+      const i = r(o, n, t.map);
+      i && e(i)
+    }))
+  }
+
+  function z(t) {
+    P(t, (e => {
+      (function (t) {
+        if (Math.random() > .001) return;
+        const e = [(t, e) => function (t, e) {
+          return t[e] = E(), t
+        }(t, e), (t, e) => function (t, e) {
+          return t.splice(e, 1), t
+        }(t, e), (t, e) => function (t, e) {
+          return t.splice(e, 0, E()), t
+        }(t, e)], o = Math.floor(Math.random() * t.program.commands.length);
+        y(e)(t.program.commands, o), t.style.h = w(t.style.h), t.style.s = w(t.style.s), t.style.v = w(t.style.v)
+      })(e), function (t, e) {
+        L(t, e)
+      }(e, t), l(e), f(e, t, ((t, e) => {
+        g(t.x, t.y, { food: { type: "food" } }, e)
+      }))
+    })), function (t) {
+      P(t, (t => {
+        t.processing = !1
+      }))
+    }(t)
+  }
+
+  const B = (t, e, o) => t >= o[0] && t <= o[2] && e >= o[1] && e <= o[3];
+
+  class ${constructor(o){this.world=o,this.size=10;const n=document.getElementById("cnv");this.ctx=n.getContext("2d"),this.ctx.imageSmoothingEnabled=!1,n.width=t*this.size,n.height=e*this.size}
+  redraw
+
+  ()
+  {
+    const o = this.ctx.createImageData(t * this.size, e * this.size);
+    for (let n = 0; n < t * this.size * e * this.size * 4; n += 4) o.data[n] = 0, o.data[n + 1] = 0, o.data[n + 2] = 0, o.data[n + 3] = 255;
+    D(this.world, ((t, e) => {
+      const n = c(t, e, this.world.map);
+      n.resources && this.drawResource(t, e, n.resources, o)
+    })), P(this.world, (t => {
+      this.drawBot(t, o)
+    })), this.ctx.putImageData(o, 0, 0)
+  }
+  drawResource(t, e, o, n)
+  {
+    if (o.food) {
+      t *= this.size, e *= this.size;
+      const o = { r: 140, g: 80, b: 0 };
+      this.writeImageDataResource(t, e, o, n)
+    }
+  }
+  writeImageDataResource(t, e, o, n)
+  {
+    for (let r = t + 3; r < t + this.size - 3; r += 1) for (let t = e + 3; t < e + this.size - 3; t += 1) this.writeImageDataPixel(r, t, o, n)
+  }
+  getColor(t)
+  {
+    const e = [0, .15, .3, .45, .6, .75, .9], o = t.program.commands.map((t => e[t])),
+      n = o.reduce(((t, e) => t + e), 0) / o.length || 0;
+    return function (t, e, o) {
+      let n, r, i;
+      1 === arguments.length && (e = t.s, o = t.v, t = t.h);
+      const s = Math.floor(6 * t), a = 6 * t - s, c = o * (1 - e), u = o * (1 - a * e), d = o * (1 - (1 - a) * e);
+      switch (s % 6) {
+        case 0:
+          n = o, r = d, i = c;
+          break;
+        case 1:
+          n = u, r = o, i = c;
+          break;
+        case 2:
+          n = c, r = o, i = d;
+          break;
+        case 3:
+          n = c, r = u, i = o;
+          break;
+        case 4:
+          n = d, r = c, i = o;
+          break;
+        case 5:
+          n = o, r = c, i = u
+      }
+      return { r: Math.round(255 * n), g: Math.round(255 * r), b: Math.round(255 * i) }
+    }(t.style.h, t.style.s, n)
+  }
+  drawBot(t, e)
+  {
+    const o = this.getColor(t), n = t.x * this.size, r = t.y * this.size;
+    this.writeImageDataBot(n, r, t, t.direction, o, e)
+  }
+  setColor(t)
+  {
+    return t
+  }
+  writeImageDataBot(t, e, o, n, r, i)
+  {
+    const s = t + 1, a = t + this.size - 2, c = e + 1, u = e + this.size - 2, d = t, m = t + this.size - 1, h = e,
+      l = e + this.size - 1, f = {
+        [p.RIGHT]: [m - 1, h + 4, m, l - 4],
+        [p.TOP]: [d + 4, h, m - 4, h + 1],
+        [p.LEFT]: [d, h + 4, d + 1, l - 4],
+        [p.BOTTOM]: [d + 4, l - 1, m - 4, l]
+      }[n];
+    for (let t = c; t <= u; t += 1) B(d, t, f) || this.writeImageDataPixel(d, t, r, i), B(m, t, f) || this.writeImageDataPixel(m, t, r, i);
+    for (let t = s; t <= a; t += 1) B(t, h, f) || this.writeImageDataPixel(t, h, r, i), B(t, l, f) || this.writeImageDataPixel(t, l, r, i);
+    for (let t = s; t <= a; t += 1) for (let e = c; e <= u; e += 1) B(t, e, f) || this.writeImageDataPixel(t, e, r, i)
+  }
+  writeImageDataPixel(e, o, n, r)
+  {
+    let i = o * t * this.size * 4 + 4 * e;
+    r.data[i] = n.r, i += 1, r.data[i] = n.g, i += 1, r.data[i] = n.b, i += 1, r.data[i] = void 0 === n.a ? 255 : n.a
+  }
+}
+const _ = {};
+let S, F = 0;
+const U = document.getElementById("cnv"), N = document.getElementById("info"), W = U.clientWidth / t,
+  K = U.clientHeight / e, V = () => {
+    void 0 !== _.botX && void 0 !== _.botY && (_.bot = r(_.botX, _.botY, S.map))
+  }, X = t => {
+    _.botX = parseInt(t.x / W, 10), _.botY = parseInt(t.y / K, 10), V()
+  };
+
+function k() {
+  const { bot: t } = _;
+  void 0 === t || t && t.xp <= 0 ? V() : N.innerHTML = `x: ${t.x}</br>y: ${t.y}</br>xp: ${parseInt(t.xp, 10)}</br>program: ${t.program.commands}</br>id: ${t.id}</br>`
+}
+
+function H(t) {
+  S = t, U.addEventListener("mousedown", X), setInterval(k, 1e3)
+}
+
+let Y;
+
+function q(t, e) {
+  const o = performance.now();
+  return t(e), performance.now() - o
+}
+
+function G(t) {
+  var e;
+  e = [q(z, t), q(Y)], F += 1, window.debugInfo1 = `${F} ${Date.now()} perf: ${e[0]}, ${e[1]} milliseconds`, requestAnimationFrame((() => G(t)))
+}
+
+const j = function () {
+  const t = function () {
+    const t = { map: [] };
+    return function (t) {
+      D(0, ((e, o) => {
+        !function (t, e, o, n = { resources: {} }) {
+          void 0 === o[t] && (o[t] = []), o[t][e] = n
+        }(e, o, t.map)
+      }))
+    }(t), function (t) {
+      D(0, ((e, o) => {
+        Math.random() > .9 && a(e, o, h(e, o, C), t.map)
+      }))
+    }(t), function (t) {
+      D(0, ((o, n) => {
+        Math.random() > .9 && g(o, n, { food: { type: "food" } }, t.map), g(o, n, {
+          light: {
+            type: "light",
+            power: 1 - n / e
+          }
+        }, t.map)
+      }))
+    }(t), window.debugWorld = t, t
+  }();
+  !function (t, e) {
+    Y = e.redraw.bind(e), requestAnimationFrame((() => G(t))), setInterval((() => {
+      console.log(Date.now(), window.debugInfo1)
+    }), 1e3), H(t)
+  }(t, new $(t))
+};
+j()
+})
+();
 //# sourceMappingURL=main.js.map

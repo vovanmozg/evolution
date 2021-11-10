@@ -9,4 +9,17 @@ function normalizeCoords(x, y) {
   return { x, y };
 }
 
-export { normalizeCoords };
+const validateCoords = (x, y) => {
+  if (x >= WIDTH || x < 0) {
+    throw new Error(`x should be from 0 to ${WIDTH}`);
+  }
+
+  if (y >= HEIGHT || y < 0) {
+    throw new Error(`x should be from 0 to ${WIDTH}`);
+  }
+};
+
+export {
+  normalizeCoords,
+  validateCoords,
+};

@@ -1,7 +1,6 @@
 // Returns coordinates behind the back of the bot
 // Returns coordinates behind the back of the bot
 import { normalizeCoords } from './coords';
-import { isProcessing as botIsProcessing } from '../bot';
 
 //              left    top      right    bottom
 const SHIFTS = [[1, 0], [0, -1], [-1, 0], [0, 1]];
@@ -38,7 +37,7 @@ function backPosition(bot) {
 //   const position = backPosition(bot);
 // }
 
-function eachNeighborBot(bot, world, performer) {
+function eachNeighborBot(bot, world, performer, botIsProcessing) {
   for (let x = -1; x <= 1; x += 1) {
     for (let y = -1; y <= 1; y += 1) {
       if (x !== 0 && y !== 0) {

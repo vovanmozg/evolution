@@ -1,5 +1,8 @@
-import { HEIGHT, WIDTH } from './domain/world';
+import {
+  eachBot, eachCell, HEIGHT, WIDTH,
+} from './domain/world';
 import Bot from './domain/bot';
+import { getCell } from './domain/world/map_modifier';
 
 /* accepts parameters
  * h  Object = {h:x, s:y, v:z}
@@ -59,15 +62,15 @@ class Drawer {
     }
 
     // Draw resources
-    this.world.eachCell((x, y) => {
-      const cell = this.world.getCell(x, y);
+    eachCell(this.world, (x, y) => {
+      const cell = getCell(x, y, this.world.map);
       if (cell.resources) {
         this.drawResource(x, y, cell.resources, imageData);
       }
     });
 
     // Draw bots
-    this.world.eachBot((bot) => {
+    eachBot(this.world, (bot) => {
       this.drawBot(bot, imageData);
     });
 
@@ -240,7 +243,7 @@ class Drawer {
   }
 
   writeImageDataPixel(x, y, color, imageData) {
-    let index = ((y * (WIDTH * this.size * 4)) + (x * 4)) + 0;
+    let index = y * WIDTH * this.size * 4 + x * 4;
     imageData.data[index] = color.r;
     index += 1;
     imageData.data[index] = color.g;

@@ -1,3 +1,4 @@
+import { isProcessing } from '../bot';
 import { eachNeighborBot } from '../world/bot_finder';
 
 const xpReduction = (neighbors) => neighbors / 3;
@@ -7,7 +8,7 @@ function execute(bot, world) {
 
   eachNeighborBot(bot, world, (_) => {
     neighbors += 1;
-  });
+  }, isProcessing);
 
   bot.xp -= xpReduction(neighbors);
 }
