@@ -16,7 +16,7 @@ function rand() {
     OPERATIONS.EAT,
     OPERATIONS.EAT_SOLAR,
     OPERATIONS.CLONE,
-    OPERATIONS.OVERPOPULATION,
+    // OPERATIONS.OVERPOPULATION,
     // OPERATIONS.KILL_NEIGHBORS,
   ];
 
@@ -42,7 +42,7 @@ function execute(bot, world) {
     [OPERATIONS.EAT]: Eat,
     [OPERATIONS.EAT_SOLAR]: EatSolar,
     [OPERATIONS.CLONE]: Clone,
-    [OPERATIONS.OVERPOPULATION]: Overpopulation,
+    // [OPERATIONS.OVERPOPULATION]: Overpopulation,
     // [OPERATIONS.KILL_NEIGHBORS]: CommandKillNeighbors,
   };
 

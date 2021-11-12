@@ -4,6 +4,7 @@ import { eachNeighborBot } from '../world/bot_finder';
 const xpReduction = (neighbors) => neighbors / 3;
 
 function execute(bot, world) {
+  return;
   let neighbors = 0;
 
   eachNeighborBot(bot, world, (_) => {

@@ -23,11 +23,11 @@ function eachCell(world, performer) {
   }
 }
 
-function eachBot(world, performer) {
+function eachBot(world, performer, options) {
   eachCell(world, (x, y) => {
     const bot = getBot(x, y, world.map);
     if (bot) {
-      performer(bot);
+      performer(bot, options);
     }
   });
 }

@@ -1,9 +1,11 @@
-import { Drawer } from './drawer';
-import { createWorld, step as worldStep } from './domain/world';
-import { initDebugWindow, onTick } from './debug_window';
+import { createDrawer, redraw } from './drawer';
+import {
+  createWorld, step as worldStep,
+} from './domain/world';
+import { initDebugWindow } from './debug_window';
 // import M from './random.js';
 
-let redraw;
+// let redraw;
 
 function debugPerformance(performer, param = undefined) {
   const time = performance.now();
@@ -11,22 +13,61 @@ function debugPerformance(performer, param = undefined) {
   return performance.now() - time;
 }
 
-function step(world) {
-  const t0 = debugPerformance(worldStep, world);
-  const t1 = debugPerformance(redraw);
-  // Print performance debug information
-  onTick([t0, t1]);
+function step(world, drawer) {
+  worldStep(world);
+  redraw(drawer);
+  // const t0 = debugPerformance(worldStep, world);
+  // const t1 = debugPerformance(redraw);
+  // // Print performance debug information
+  // onTick([t0, t1]);
 
-  requestAnimationFrame(() => step(world));
+  const kuku = () => step(world, drawer);
+  requestAnimationFrame(kuku);
 }
 
+// window.debugInfo2 = {
+//   counter: 0,
+// };
+//
+// var canvas = document.getElementById('cnv');
+// var ctx = canvas.getContext('2d');
+// var W = 2500;
+// var H = 2500;
+// canvas.width = W;
+// canvas.height = H;
+//
+//
+// function test(timestamp) {
+//   window.debugInfo2.counter ++;
+//
+//   const imageData = ctx.createImageData(W, H);
+//
+//   // Fill entire canvas with black
+//   for (let i = 0; i < W * H * 4; i += 4) {
+//     imageData.data[i] = 200;
+//     imageData.data[i + 1] = 100;
+//     imageData.data[i + 2] = 0;
+//     imageData.data[i + 3] = 255;
+//   }
+//
+//   ctx.putImageData(imageData, 0, 0);
+//
+//   requestAnimationFrame(test);
+// }
+
 function run(world, drawer) {
+  // setInterval(() => {
+  //   console.log(Date.now(), window.debugInfo2); // eslint-disable-line no-console
+  // }, 1000);
+  // requestAnimationFrame(test);
+  // return
+
   // worldStep = world.step.bind(world);
-  redraw = drawer.redraw.bind(drawer);
+  // redraw = drawer.redraw.bind(drawer);
 
   // this.stepBusinessLogic();
 
-  requestAnimationFrame(() => step(world));
+  requestAnimationFrame(() => step(world, drawer));
 
   setInterval(() => {
     console.log(Date.now(), window.debugInfo1); // eslint-disable-line no-console
@@ -37,7 +78,7 @@ function run(world, drawer) {
 
 function perform() {
   const world = createWorld();
-  const drawer = new Drawer(world);
+  const drawer = createDrawer(world);
   run(world, drawer);
 }
 

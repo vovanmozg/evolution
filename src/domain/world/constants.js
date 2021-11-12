@@ -1,5 +1,5 @@
 const WIDTH = 100;
-const HEIGHT = 40;
+const HEIGHT = 50;
 
 export {
   WIDTH,
