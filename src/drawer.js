@@ -246,19 +246,25 @@ function createDrawer(world) {
   return drawer;
 }
 
+
 // Draw bots
 function drawEachBot(bot, options) { drawBot(bot, options.imageData); }
+
+function fill(imageData) {
+  imageData.data.fill(0);
+  // Fill entire canvas with black
+  for (let i = 0; i < WIDTH * CELL_SIZE * HEIGHT * CELL_SIZE * 4; i += 4) {
+    // imageData.data[i] = 0;
+    // imageData.data[i + 1] = 0;
+    // imageData.data[i + 2] = 0;
+    imageData.data[i + 3] = 255;
+  }
+}
 
 function redraw(drawer) {
   const imageData = drawer.ctx.createImageData(WIDTH * CELL_SIZE, HEIGHT * CELL_SIZE);
 
-  // Fill entire canvas with black
-  for (let i = 0; i < WIDTH * CELL_SIZE * HEIGHT * CELL_SIZE * 4; i += 4) {
-    imageData.data[i] = 0;
-    imageData.data[i + 1] = 0;
-    imageData.data[i + 2] = 0;
-    imageData.data[i + 3] = 255;
-  }
+  fill(imageData);
 
   // Draw resources
   drawResources(drawer.world, imageData);
