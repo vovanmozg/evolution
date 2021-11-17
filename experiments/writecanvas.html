@@ -1,0 +1,119 @@
+<html>
+<head>
+
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #ccc;
+            color: #333;
+            font-family: Arial;
+            font-size: 12px;
+        }
+        #cnv {
+            background: #fff;
+            width: 100%;
+        }
+
+        #info {
+            width: 100%;
+            zheight: 100px;
+            background: white;
+            zposition: absolute;
+            bottom: 0;
+            right: 0;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<canvas id="cnv"></canvas>
+<div id="info">
+    .
+</div>
+
+</body>
+<script>
+  const size = 3000;
+  const canvas = document.getElementById('cnv');
+  canvas.width = size;
+  canvas.height = size;
+  ctx = canvas.getContext('2d');
+
+
+  let color = 0;
+
+  function createImage() {
+    return ctx.createImageData(size, size);
+  }
+
+  function fill(imageData) {
+    // Fill entire canvas with black
+    for (let i = 0; i < size * size * 4; i += 4) {
+
+      imageData.data[i] = 0;
+      imageData.data[i + 1] = Math.random()*255;//color;
+      imageData.data[i + 2] = 100;
+      imageData.data[i + 3] = 255;
+    }
+  }
+
+  function putImage(imageData) {
+    ctx.putImageData(imageData, 0, 0);
+  }
+
+
+  // function getIdx(x, y, j, imageData) {
+  //   return (x + (y + j) * 2000) * 4;
+  // }
+
+  // function somehowProcessTheData(imageData, x, y, w, h){
+  //   //console.log(imageData.width)
+  //   var i,j;
+  //   var result = "";
+  //   var r,g,b,a;
+  //   const data = imageData.data;
+  //
+  //   for(j = 0; j < h; j++){
+  //     var idx = getIdx(x, y, j, imageData);  // get left most byte index for row at y + j
+  //     for(i = 0; i < w; i++){
+  //       r = data[idx ++];
+  //       g = data[idx ++];
+  //       b = data[idx ++];
+  //       a = data[idx ++];
+  //       // do the processing
+  //     }
+  //   }
+  //   return result;
+  // }
+
+  function step() {
+    t0 = performance.now();
+    const imageData = createImage();
+
+
+    fill(imageData);
+
+
+    color ++;
+    if (color > 255) color = 0;
+
+    putImage(imageData);
+
+    t1 = performance.now();
+    //console.log(t1 - t0)
+
+
+    //somehowProcessTheData(imageData, 0, 0, 2000, 2000)
+
+    requestAnimationFrame(step);
+  }
+
+  requestAnimationFrame(step);
+
+</script>
+</html>
+
