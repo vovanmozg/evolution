@@ -246,7 +246,6 @@ function createDrawer(world) {
   return drawer;
 }
 
-
 // Draw bots
 function drawEachBot(bot, options) { drawBot(bot, options.imageData); }
 

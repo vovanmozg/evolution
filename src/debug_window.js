@@ -4,6 +4,7 @@ import { getBot } from './domain/world/bot_finder';
 const debugOptions = {};
 let world;
 let counter = 0;
+window.counter = 0;
 
 // global vars for this module
 const cnv = document.getElementById('cnv');
@@ -58,9 +59,10 @@ String.prototype.hashCode = function () {
 };
 
 function onTick(times) {
+  window.counter++;
   counter += 1;
-  const hash = JSON.stringify(window.debugWorld).hashCode();
-  window.debugInfo1 = `${counter} ${hash} ${Date.now()} perf: ${times[0]}, ${times[1]} milliseconds`;
+  // const hash = JSON.stringify(window.debugWorld).hashCode();
+  window.debugInfo1 = `${counter} ${Date.now()} perf: ${times[0]}, ${times[1]} milliseconds`;
   updateDebugWindow();
 }
 

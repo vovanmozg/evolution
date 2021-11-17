@@ -2,7 +2,7 @@ import { createDrawer, redraw } from './drawer';
 import {
   createWorld, step as worldStep,
 } from './domain/world';
-import { initDebugWindow } from './debug_window';
+import { initDebugWindow, onTick } from './debug_window';
 // import M from './random.js';
 
 // let redraw;
@@ -16,13 +16,13 @@ function debugPerformance(performer, param = undefined) {
 function step(world, drawer) {
   worldStep(world);
   redraw(drawer);
-  // const t0 = debugPerformance(worldStep, world);
-  // const t1 = debugPerformance(redraw);
-  // // Print performance debug information
-  // onTick([t0, t1]);
 
-  const kuku = () => step(world, drawer);
-  requestAnimationFrame(kuku);
+  const t0 = debugPerformance(worldStep, world);
+  const t1 = debugPerformance(redraw, drawer);
+  // // Print performance debug information
+  onTick([t0, t1]);
+
+  requestAnimationFrame(() => step(world, drawer));
 }
 
 // window.debugInfo2 = {
