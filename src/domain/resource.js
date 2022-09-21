@@ -1,6 +1,6 @@
-import { World } from './world';
+//import { World } from './world';
 
-export class Resource {
+class Resource {
   static add(x, y, resource, map) {
     World.validateCoords(x, y);
     map[x][y].resources = {

@@ -1432,7 +1432,8 @@
           void 0 === n.counter ? Et = t : n.counter = t
         }(0, Lt("counter") + 1);
         var n = performance.now();
-        this.drawer.redraw(), n = performance.now() - n, Lt("counter") % 11 == 0 && console.log("perf: ".concat(t, ", ").concat(n, " milliseconds.")), requestAnimationFrame((function () {
+        this.drawer.redraw();
+        n = performance.now() - n, Lt("counter") % 11 == 0 && console.log("perf: ".concat(t, ", ").concat(n, " milliseconds.")), requestAnimationFrame((function () {
           return e.step()
         }))
       }

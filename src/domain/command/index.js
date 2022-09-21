@@ -1,5 +1,6 @@
-import { OPERATIONS } from '../program';
-import { Bot } from '../bot';
+// import { OPERATIONS } from '../program';
+// import { Bot } from '../bot';
+
 // import Move from './command/move';
 // import RotateClockwise from './rotate_clockwise';
 // import RotateCounterclockwise from './rotate_counterclockwise';
@@ -7,7 +8,7 @@ import { Bot } from '../bot';
 
 const CLONE_RATE = 2;
 
-export class Command {
+class Command {
   // Generates random operations sequence
   static rand() {
     const items = [

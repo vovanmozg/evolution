@@ -1,7 +1,7 @@
-import { Bot } from './bot';
-import { Resource } from './resource';
-import { Mutation } from './mutation';
-import { Program } from './program';
+// import { Bot } from './bot';
+// import { Resource } from './resource';
+// import { Mutation } from './mutation';
+// import { Program } from './program';
 
 /**
  * Bot has 4 directions: right, up, left, down. Direction stored as code:
@@ -11,7 +11,7 @@ import { Program } from './program';
 const WIDTH = 100;
 const HEIGHT = 50;
 
-export class World {
+class World {
 
   constructor(width, height) {
     this.width = width; // cols
@@ -188,7 +188,7 @@ export class World {
 
 
 // Creates world with population
-export class WorldCreator {
+class WorldCreator {
   static create() {
     // Create world as matrix
     const world = new World(WIDTH, HEIGHT);
@@ -200,7 +200,7 @@ export class WorldCreator {
   }
 }
 
-export {
-  WIDTH,
-  HEIGHT,
-};
+// export {
+//   WIDTH,
+//   HEIGHT,
+// };

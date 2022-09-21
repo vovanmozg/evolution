@@ -1,6 +1,6 @@
-import { Program } from './program';
-import { Resource } from './resource';
-import { World } from './world';
+// import { Program } from './program';
+// import { Resource } from './resource';
+// import { World } from './world';
 
 const DEFAULT_BOT = {
   x: 0,
@@ -133,4 +133,4 @@ class Bot {
   }
 }
 
-export { Bot, DEFAULT_BOT };
+//export { Bot, DEFAULT_BOT };

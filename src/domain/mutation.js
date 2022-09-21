@@ -1,6 +1,6 @@
-import { OPERATIONS } from './program';
+//import { OPERATIONS } from './program';
 
-export class Mutation {
+class Mutation {
   static MUTATION_PROBABILITY = 0.001;
 
   static mutate(bot) {

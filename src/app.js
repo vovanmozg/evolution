@@ -1,5 +1,5 @@
-import { Bot, DEFAULT_BOT } from './domain/bot';
-import { WorldCreator, World, WIDTH, HEIGHT } from './domain/world';
+// import { Bot, DEFAULT_BOT } from './domain/bot';
+// import { WorldCreator, World, WIDTH, HEIGHT } from './domain/world';
 
 // const DEFAULT_CELL = {
 // 	resources: {},
@@ -8,29 +8,29 @@ import { WorldCreator, World, WIDTH, HEIGHT } from './domain/world';
 // const FPS = 1;
 
 // Groups of bots for testing purposes. They can be used in populate()
-const TEST_CASES = [
-  [
-    {
-      ...DEFAULT_BOT, x: 42, y: 20, direction: 90, id: '0.99', rotate: 1, program: { commands: [1, 1, 0, 0, 1] }, options: {},
-    },
-    {
-      ...DEFAULT_BOT, x: 42, y: 21, direction: 90, id: '0.10', rotate: 1, program: { commands: [0, 1, 1, 1, 0] }, options: {},
-    },
-  ],
-  [
-    {
-      ...DEFAULT_BOT, x: 10, y: 10, direction: 270, id: '0.99', rotate: 1, program: { commands: [0, 1] }, options: {}, processing: false,
-    },
-    {
-      ...DEFAULT_BOT, x: 10, y: 11, direction: 90, id: '0.10', rotate: 1, program: { commands: [0, 1] }, options: {}, processing: false,
-    },
-  ],
-  [
-    {
-      ...DEFAULT_BOT, x: 10, y: 10, direction: 270, id: '0.99', rotate: 1, program: { commands: [5] }, options: {}, processing: false,
-    },
-  ],
-];
+// const TEST_CASES = [
+//   [
+//     {
+//       ...DEFAULT_BOT, x: 42, y: 20, direction: 90, id: '0.99', rotate: 1, program: { commands: [1, 1, 0, 0, 1] }, options: {},
+//     },
+//     {
+//       ...DEFAULT_BOT, x: 42, y: 21, direction: 90, id: '0.10', rotate: 1, program: { commands: [0, 1, 1, 1, 0] }, options: {},
+//     },
+//   ],
+//   [
+//     {
+//       ...DEFAULT_BOT, x: 10, y: 10, direction: 270, id: '0.99', rotate: 1, program: { commands: [0, 1] }, options: {}, processing: false,
+//     },
+//     {
+//       ...DEFAULT_BOT, x: 10, y: 11, direction: 90, id: '0.10', rotate: 1, program: { commands: [0, 1] }, options: {}, processing: false,
+//     },
+//   ],
+//   [
+//     {
+//       ...DEFAULT_BOT, x: 10, y: 10, direction: 270, id: '0.99', rotate: 1, program: { commands: [5] }, options: {}, processing: false,
+//     },
+//   ],
+// ];
 
 /** ***********************************************
  * Infrastructure level

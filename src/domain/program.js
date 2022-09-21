@@ -1,8 +1,8 @@
-import { Command } from './command';
+//import { Command } from './command';
 
 const PROGRAM_LENGTH = 10;
 
-export class Program {
+class Program {
   static generate() {
     const commands = [];
     // Create program with PROGRAM_LENGTH commands
@@ -32,6 +32,6 @@ const OPERATIONS = {
 //		KILL_NEIGHBORS: 7,
 };
 
-export {
-  OPERATIONS,
-};
+// export {
+//   OPERATIONS,
+// };
