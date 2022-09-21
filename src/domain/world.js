@@ -125,7 +125,7 @@ function createWorld() {
   populate(world);
   initResources(world);
 
-  window.debugWorld = world;
+  // window.debugWorld = world;
   return world;
 }
 

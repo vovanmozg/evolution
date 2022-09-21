@@ -13,16 +13,15 @@ function debugPerformance(performer, param = undefined) {
   return performance.now() - time;
 }
 
-function step(world, drawer) {
-  worldStep(world);
-  redraw(drawer);
+function step(worker) {
+  worker.postMessage('Hi service worker');
 
-  const t0 = debugPerformance(worldStep, world);
-  const t1 = debugPerformance(redraw, drawer);
+  // const t0 = debugPerformance(worldStep, world);
+  // const t1 = debugPerformance(redraw, drawer);
   // // Print performance debug information
-  onTick([t0, t1]);
+  // onTick([t0, t1]);
 
-  requestAnimationFrame(() => step(world, drawer));
+  requestAnimationFrame(() => step(worker));
 }
 
 // window.debugInfo2 = {
@@ -55,7 +54,7 @@ function step(world, drawer) {
 //   requestAnimationFrame(test);
 // }
 
-function run(world, drawer) {
+function run(worker) {
   // setInterval(() => {
   //   console.log(Date.now(), window.debugInfo2); // eslint-disable-line no-console
   // }, 1000);
@@ -67,19 +66,36 @@ function run(world, drawer) {
 
   // this.stepBusinessLogic();
 
-  requestAnimationFrame(() => step(world, drawer));
-
-  setInterval(() => {
-    console.log(Date.now(), window.debugInfo1); // eslint-disable-line no-console
+  setTimeout(() => {
+    requestAnimationFrame(() => step(worker));
   }, 1000);
 
-  initDebugWindow(world);
+  // setInterval(() => {
+  //   console.log(Date.now(), window.debugInfo1); // eslint-disable-line no-console
+  // }, 1000);
+  //
+  // initDebugWindow(world);
 }
 
 function perform() {
-  const world = createWorld();
-  const drawer = createDrawer(world);
-  run(world, drawer);
+  const worker = new Worker(new URL('./worker.js', import.meta.url));
+
+  const drawer = createDrawer(null);
+
+  worker.onmessage = function (event) {
+    const world = event.data;
+    console.log('Message from worker:', event.data); // ["foo", "bar", "baz"]
+    redraw(drawer, world);
+  };
+
+  // setInterval(() => {
+  //   //worker.ready.then( registration => {
+  //   worker.postMessage("Hi service worker");
+  //   console.log('messages posted', worker)
+  //   //});
+  // }, 1000);
+
+  run(worker);
 }
 
 function debug(msg) {

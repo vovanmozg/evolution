@@ -236,7 +236,7 @@ function createDrawer(world) {
   canvas.height = HEIGHT * CELL_SIZE;
 
   const drawer = {
-    world,
+    // world,
     ctx: canvas.getContext('2d'),
   };
 
@@ -260,15 +260,15 @@ function fill(imageData) {
   }
 }
 
-function redraw(drawer) {
+function redraw(drawer, world) {
   const imageData = drawer.ctx.createImageData(WIDTH * CELL_SIZE, HEIGHT * CELL_SIZE);
 
   fill(imageData);
 
   // Draw resources
-  drawResources(drawer.world, imageData);
+  drawResources(world, imageData);
 
-  eachBot(drawer.world, drawEachBot, { imageData });
+  eachBot(world, drawEachBot, { imageData });
 
   // Display data on canvas
   drawer.ctx.putImageData(imageData, 0, 0);
